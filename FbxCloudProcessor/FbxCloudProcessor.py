@@ -17,8 +17,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     imageWidth = 500
     imageHeight = 500
 
-    maxRenderX = 100
-    maxRenderY = 100
+    
 
     path = s.path    
     filepath = path[1:]     
@@ -126,7 +125,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                      [ 0, 0, 1, 0],
                      [ 0, 0, 0, 0]]    
     """rotate the camera to have an isometric point of view"""
-    cameraToWorld = rotateMatrix(cameraToWorld, -180, 45, 0)
+    """careful: right handed euler rotation"""
+    cameraToWorld = rotateMatrix(cameraToWorld, 45, -45, 0)
     worldToCamera = transposeMatrix(cameraToWorld)
 
     controlPoints = [];
@@ -134,8 +134,12 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def getVertices (node) :
 
-        mesh = node.GetMesh()        
-        if(mesh != None and mesh.IsTriangleMesh()) :
+        mesh = node.GetMesh()  
+          
+        if(mesh != None and (mesh.IsTriangleMesh()) == False) :
+            print "Found a mesh not triangulated"     
+
+        if(mesh != None and mesh.IsTriangleMesh()) :            
 
             cPoints = mesh.GetControlPoints();
             count = list(range(len(cPoints)))
@@ -175,12 +179,34 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def projectVertices () :
 
+        maxRenderX = 0
+        minRenderX = 0
+        maxRenderY = 0
+        minRenderY = 0
+
         count = range(len(controlPoints))
         for i in count:       
             """controlPoints world->camera space"""                         
             controlPoints[i] = vectorDotMatrix(controlPoints[i], worldToCamera)
-            """orthographic projection: get rid of z component, normalize respect the image size and adapt to svg coordinates (Y axis inverted)"""
-            controlPoints[i] = [controlPoints[i][0]/maxRenderX*imageWidth + imageWidth/2, -controlPoints[i][1]/maxRenderY*imageHeight + imageWidth/2]
+            """orthographic projection: get rid of z component"""
+            controlPoints[i] = [controlPoints[i][0], -controlPoints[i][1]]
+            """check projected boundaries"""
+            if (controlPoints[i][0] > maxRenderX) :
+                maxRenderX = controlPoints[i][0]
+            if (controlPoints[i][0] < minRenderX) :
+                minRenderX = controlPoints[i][0]
+            if (controlPoints[i][1] > maxRenderY) :
+                maxRenderY = controlPoints[i][1]
+            if (controlPoints[i][1] < minRenderY) :
+                minRenderY = controlPoints[i][1]
+
+        renderXRange = maxRenderX - minRenderX
+        renderYRAnge = maxRenderY - minRenderY
+        
+        for i in count:             
+            """normalize respect the image size and adapt to svg coordinates (Y axis inverted)"""
+            controlPoints[i] = [controlPoints[i][0] - minRenderX, controlPoints[i][1] - minRenderY]
+            controlPoints[i] = [controlPoints[i][0]/renderXRange*imageWidth, controlPoints[i][1]/renderYRAnge*imageHeight]
         return  
 
     """Main"""
