@@ -8,16 +8,40 @@ import svgwrite
 import urllib2
 import math
 
+
+class MyMesh() :    
+
+    transform = [[ 1, 0, 0, 0],
+                 [ 0, 1, 0, 0],
+                 [ 0, 0, 1, 0],
+                 [ 0, 0, 0, 0]]
+    controlPoints = []
+    vertexIndicesArray = []
+
+    def __init__(self):
+        self.transform = [[ 1, 0, 0, 0],
+                        [ 0, 1, 0, 0],
+                        [ 0, 0, 1, 0],
+                        [ 0, 0, 0, 0]]
+        self.controlPoints = []
+        self.vertexIndicesArray = []
+    
+        
+    
  
-class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler): 
+class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+    
+ 
 
   def do_GET(s):
     """Count vertex of a fbx file on the server"""  
+    print "received"
+    
 
     imageWidth = 500
     imageHeight = 500
 
-    
+    visitedNodesId = []
 
     path = s.path    
     filepath = path[1:]     
@@ -127,54 +151,53 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     """rotate the camera to have an isometric point of view"""
     """careful: right handed euler rotation"""
     cameraToWorld = rotateMatrix(cameraToWorld, 45, -45, 0)
-    worldToCamera = transposeMatrix(cameraToWorld)
+    worldToCamera = transposeMatrix(cameraToWorld)   
 
-    controlPoints = [];
-    vertexIndicesArray = []
+    meshes = []
 
-    def getVertices (node) :
+    def exploreMesh (node) :
 
-        mesh = node.GetMesh()  
-          
-        if(mesh != None and (mesh.IsTriangleMesh()) == False) :
-            print "Found a mesh not triangulated"     
+        mesh = node.GetMesh()
+        m = MyMesh()
 
-        if(mesh != None and mesh.IsTriangleMesh()) :            
+        fbxMatrix = fbx.FbxAMatrix()
+        fbxMatrix = node.EvaluateGlobalTransform()
+        for i in range (0, 4) :
+            for j in range (0, 4) :
+                m.transform[i][j] = fbxMatrix.Get(i, j)             
 
-            cPoints = mesh.GetControlPoints();
-            count = list(range(len(cPoints)))
-            for i in count:
-                controlPoints.append(cPoints[i])
-
-            polygonCount = mesh.GetPolygonCount()
-            count = list(range(polygonCount))
-            for i in count:       
-                """Get indices for the current triangle"""   
-                _indices = []   
-                for j in range(0, 3): 
-                    _indices.append(mesh.GetPolygonVertex(i, j))
-
-                """Check if the polygon is facing the camera, discard it if not"""                
-
-                _normals = []
-                for j in range(0, 3): 
-                    normal = fbx.FbxVector4()
-                    mesh.GetPolygonVertexNormal(i, j, normal)                    
-                    _normals.append([normal[0], normal[1], normal[2], normal[3]])
-
-                """Here we have the normals of the 3 vertices. Interpolate and compare with the camera z vector"""
-                interpolatedNormal = interpolate3Vectors(_normals[0], _normals[1], _normals[2])
-                if (vector4ScalarProduct(interpolatedNormal, cameraToWorld[2]) > 0) :
-                    vertexIndicesArray.append(_indices)
-
-                                                   
-                        
-                             
-        childNumber = node.GetChildCount()
-        count = list(range(childNumber))
+        cPoints = mesh.GetControlPoints();
+        count = list(range(len(cPoints)))
         for i in count:
-            getVertices(node.GetChild(i))   
-                           
+            p = [cPoints[i][0], cPoints[i][1], cPoints[i][2], 1]  
+            """apply their global rotation"""
+            p = vectorDotMatrix(p, m.transform)          
+            m.controlPoints.append(p)
+
+        polygonCount = mesh.GetPolygonCount()
+        count = list(range(polygonCount))
+        for i in count:       
+            """Get indices for the current triangle"""   
+            _indices = []   
+            for j in range(0, 3): 
+                _indices.append(mesh.GetPolygonVertex(i, j))
+
+            """Check if the polygon is facing the camera, discard it if not""" 
+            _normals = []
+            for j in range(0, 3): 
+                normal = fbx.FbxVector4()
+                mesh.GetPolygonVertexNormal(i, j, normal) 
+                """ rotate the normals too for culling purposes """ 
+                normal = vectorDotMatrix(normal, m.transform)                  
+                _normals.append([normal[0], normal[1], normal[2], normal[3]])
+
+            """Here we have the normals of the 3 vertices. Interpolate and compare with the camera z vector"""
+            interpolatedNormal = interpolate3Vectors(_normals[0], _normals[1], _normals[2])
+            if (vector4ScalarProduct(interpolatedNormal, cameraToWorld[2]) > 0) :
+                m.vertexIndicesArray.append(_indices)
+
+        meshes.append(m)        
+                                       
         return     
     
     def projectVertices () :
@@ -184,44 +207,74 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         maxRenderY = 0
         minRenderY = 0
 
-        count = range(len(controlPoints))
-        for i in count:       
-            """controlPoints world->camera space"""                         
-            controlPoints[i] = vectorDotMatrix(controlPoints[i], worldToCamera)
-            """orthographic projection: get rid of z component"""
-            controlPoints[i] = [controlPoints[i][0], -controlPoints[i][1]]
-            """check projected boundaries"""
-            if (controlPoints[i][0] > maxRenderX) :
-                maxRenderX = controlPoints[i][0]
-            if (controlPoints[i][0] < minRenderX) :
-                minRenderX = controlPoints[i][0]
-            if (controlPoints[i][1] > maxRenderY) :
-                maxRenderY = controlPoints[i][1]
-            if (controlPoints[i][1] < minRenderY) :
-                minRenderY = controlPoints[i][1]
+        """transform to word coordinates and project each control point of each mesh"""
+        for k in range(len(meshes)):       
+            m = meshes[k]
+            count = range(len(m.controlPoints))
+            for i in count:       
+                """controlPoints local->world space, not here, cause we have already culled them"""
+                """m.controlPoints[i] = vectorDotMatrix(m.controlPoints[i], m.transform)"""
+                """controlPoints world->camera space"""                         
+                m.controlPoints[i] = vectorDotMatrix(m.controlPoints[i], worldToCamera)
+                """orthographic projection: get rid of z component"""
+                m.controlPoints[i] = [m.controlPoints[i][0], -m.controlPoints[i][1]]
+                """check projected boundaries"""
+                if (m.controlPoints[i][0] > maxRenderX) :
+                    maxRenderX = m.controlPoints[i][0]
+                if (m.controlPoints[i][0] < minRenderX) :
+                    minRenderX = m.controlPoints[i][0]
+                if (m.controlPoints[i][1] > maxRenderY) :
+                    maxRenderY = m.controlPoints[i][1]
+                if (m.controlPoints[i][1] < minRenderY) :
+                    minRenderY = m.controlPoints[i][1]
 
         renderXRange = maxRenderX - minRenderX
         renderYRAnge = maxRenderY - minRenderY
-        
-        for i in count:             
-            """normalize respect the image size and adapt to svg coordinates (Y axis inverted)"""
-            controlPoints[i] = [controlPoints[i][0] - minRenderX, controlPoints[i][1] - minRenderY]
-            controlPoints[i] = [controlPoints[i][0]/renderXRange*imageWidth, controlPoints[i][1]/renderYRAnge*imageHeight]
+
+
+        for k in range(len(meshes)):       
+            m = meshes[k]
+            count = range(len(m.controlPoints))
+            for i in count:             
+                """normalize respect the image size and adapt to svg coordinates (Y axis inverted)"""
+                m.controlPoints[i] = [m.controlPoints[i][0] - minRenderX, m.controlPoints[i][1] - minRenderY]
+                m.controlPoints[i] = [m.controlPoints[i][0]/renderXRange*imageWidth, m.controlPoints[i][1]/renderYRAnge*imageHeight]
         return  
 
     """Main"""
-    getVertices(root)    
+    def exploreScene(node):         
+
+        mesh = node.GetMesh()  
+          
+        if(mesh != None and (mesh.IsTriangleMesh()) == False) :
+            print "Found a mesh not triangulated"     
+
+        if(mesh != None and mesh.IsTriangleMesh()) :
+            exploreMesh(node)            
+
+        childNumber = node.GetChildCount()
+        count = list(range(childNumber))
+        for i in count:
+            exploreScene(node.GetChild(i))   
+                           
+        return  
+    meshes = []
+    exploreScene(root)
+    """getVertices(root) """   
     projectVertices()       
 
-    dwg = svgwrite.Drawing('testTriangle.svg' ,size=(imageWidth, imageHeight))
+    dwg = svgwrite.Drawing('render.svg' ,size=(imageWidth, imageHeight))
     """we draw a polygon for each entry in vertexIndicesArray"""
-    count = range(len(vertexIndicesArray))
-    for i in count:
-        polygon = svgwrite.shapes.Polygon()
-        for j in range(0,3) :            
-            """take the corresponding control points for forming this polygon"""
-            polygon.points.append(controlPoints[vertexIndicesArray[i][j]])
-        dwg.add(polygon)     
+
+    for k in range(len(meshes)):       
+        m = meshes[k]
+        count = range(len(m.vertexIndicesArray))
+        for i in count:
+            polygon = svgwrite.shapes.Polygon()
+            for j in range(0,3) :            
+                """take the corresponding control points for forming this polygon"""
+                polygon.points.append(m.controlPoints[m.vertexIndicesArray[i][j]])
+            dwg.add(polygon)     
        
     dwg.save()
 
@@ -230,8 +283,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     s.end_headers()
     s.wfile.write("<html><head><title>FBX online counter</title></head>")
     s.wfile.write("<body><p>Put the fbx file path in the URL</p>")
-    """s.wfile.write("<p>Vertex count: %s</p>" % (vertexCount))"""
-    
+    """s.wfile.write("<p>Vertex count: %s</p>" % (vertexCount))"""    
     s.wfile.write("</body></html>")
 
 httpd = BaseHTTPServer.HTTPServer(("localhost", 8000), MyHandler)
