@@ -1,2 +1,4 @@
 FbxCloudProcessor/Assets/
 *.FBX
+*.svg
+*.suo
