@@ -7,6 +7,7 @@ import fbx
 import svgwrite
 import urllib2
 import math
+import urllib2
 
 
 class MyMesh() :    
@@ -25,6 +26,17 @@ class MyMesh() :
                         [ 0, 0, 0, 0]]
         self.controlPoints = []
         self.vertexIndicesArray = []
+
+class MyPolygon() :
+
+    mesh = 0        
+    vertexIndicesArray = []
+    depth = 0
+
+    def __init__(self):
+        mesh = 0        
+        vertexIndicesArray = []
+        depth = 0
     
         
     
@@ -41,7 +53,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     imageWidth = 500
     imageHeight = 500
 
-    visitedNodesId = []
+    polygons = []
+    sortedPolygons = []
 
     path = s.path    
     filepath = path[1:]     
@@ -62,7 +75,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             
 
     """status = importer.Initialize("object.fbx")"""
-    status = importer.Initialize("TestMesh.FBX")
+    status = importer.Initialize("TestMesh02.fbx")
     if status == False :
       print 'fbx initialization failed'
       print 'Error: %s' % importer.GetLastErrorString()
@@ -216,8 +229,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 """m.controlPoints[i] = vectorDotMatrix(m.controlPoints[i], m.transform)"""
                 """controlPoints world->camera space"""                         
                 m.controlPoints[i] = vectorDotMatrix(m.controlPoints[i], worldToCamera)
-                """orthographic projection: get rid of z component"""
-                m.controlPoints[i] = [m.controlPoints[i][0], -m.controlPoints[i][1]]
+                
+                m.controlPoints[i] = [m.controlPoints[i][0], -m.controlPoints[i][1], m.controlPoints[i][2]]
                 """check projected boundaries"""
                 if (m.controlPoints[i][0] > maxRenderX) :
                     maxRenderX = m.controlPoints[i][0]
@@ -237,8 +250,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             count = range(len(m.controlPoints))
             for i in count:             
                 """normalize respect the image size and adapt to svg coordinates (Y axis inverted)"""
-                m.controlPoints[i] = [m.controlPoints[i][0] - minRenderX, m.controlPoints[i][1] - minRenderY]
-                m.controlPoints[i] = [m.controlPoints[i][0]/renderXRange*imageWidth, m.controlPoints[i][1]/renderYRAnge*imageHeight]
+                m.controlPoints[i] = [m.controlPoints[i][0] - minRenderX, m.controlPoints[i][1] - minRenderY, m.controlPoints[i][2]]
+                m.controlPoints[i] = [m.controlPoints[i][0]/renderXRange*imageWidth, m.controlPoints[i][1]/renderYRAnge*imageHeight, m.controlPoints[i][2]]
         return  
 
     """Main"""
@@ -257,26 +270,66 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         for i in count:
             exploreScene(node.GetChild(i))   
                            
-        return  
-    meshes = []
-    exploreScene(root)
-    """getVertices(root) """   
-    projectVertices()       
+        return 
 
-    dwg = svgwrite.Drawing('render.svg' ,size=(imageWidth, imageHeight))
-    """we draw a polygon for each entry in vertexIndicesArray"""
+    def createPolygons() :
+        for k in range(len(meshes)):       
+            m = meshes[k]
+            count = range(len(m.vertexIndicesArray))
+            for i in count:   
+                _myPolygon = MyPolygon()
+                _myPolygon.mesh = k
+                _myPolygon.vertexIndicesArray = m.vertexIndicesArray[i]
+                z1 = m.controlPoints[_myPolygon.vertexIndicesArray[0]][2]
+                z2 = m.controlPoints[_myPolygon.vertexIndicesArray[1]][2]
+                z3 = m.controlPoints[_myPolygon.vertexIndicesArray[2]][2]
+                _myPolygon.depth = (z1 + z2 + z3)/3 
+                polygons.append(_myPolygon)
 
-    for k in range(len(meshes)):       
-        m = meshes[k]
-        count = range(len(m.vertexIndicesArray))
-        for i in count:
+    def sortPolygons() :
+        return sorted(polygons, key=lambda poly: poly.depth, reverse=False)                    
+    
+    def drawPolygons() :
+        dwg = svgwrite.Drawing('render.svg' ,size=(imageWidth, imageHeight))
+        """background"""
+        """dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(255,255,255)'))"""         
+
+        """transform = "[[ 1, 0, 0, 0],[ 0, 1, 0, 0],[ 0, 0, 1, 0],[ 0, 0, 0, 0]]"
+        transform = rotateMatrix(transform, 0, 45, 45)"""
+
+        transform = svgwrite.mixins.Transform()
+        
+
+        pattern = dwg.pattern(size=(20, 20), patternTransform = "rotate(45)")
+        
+        pattern['id'] = 'testPattern'        
+        image = dwg.image("checker.png", insert=(0, 0), size=(20, 20))
+        pattern.add(image)
+        
+        
+        """pattern['transform'] = "rotate(0 0 45)"""
+
+        dwg.defs.add(pattern)
+        
+        for i in range(len(sortedPolygons)):
             polygon = svgwrite.shapes.Polygon()
+            m = sortedPolygons[i].mesh
             for j in range(0,3) :            
                 """take the corresponding control points for forming this polygon"""
-                polygon.points.append(m.controlPoints[m.vertexIndicesArray[i][j]])
-            dwg.add(polygon)     
-       
-    dwg.save()
+                p = meshes[m].controlPoints[sortedPolygons[i].vertexIndicesArray[j]]
+                p = [p[0], p[1]]
+                polygon.points.append(p) 
+                polygon.fill("rgb(0, 0, 255)")          
+            """polygon.fill(pattern)"""
+                                   
+            dwg.add(polygon)
+        dwg.save()            
+    
+    exploreScene(root)       
+    projectVertices()     
+    createPolygons()
+    sortedPolygons = sortPolygons()
+    drawPolygons(); 
 
     s.send_response(200)
     s.send_header("Content-type", "text/html")

@@ -2,3 +2,7 @@ FbxCloudProcessor/Assets/
 *.FBX
 *.svg
 *.suo
+*.jpg
+*.png
+*.pdf
+FbxCloudProcessor/testPattern.html
