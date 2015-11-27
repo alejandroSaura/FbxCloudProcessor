@@ -1,5 +1,6 @@
 import fbx
 import MyMaths
+import MyRenderer
 
 import svgwrite
 from PIL import Image 
@@ -55,10 +56,14 @@ class Scene () :
         self.exploreScene(root)
 
     def Render (self) :
-        self.projectVertices()
-        self.calculatePolygons()
-        self.sortPolygons()
-        self.drawPolygons()
+        boundaries = self.calculateWorldBoundaries()
+        self.renderer.SetCamera(self.worldToCamera)
+        self.renderer.SetWorldBoundaries(boundaries)
+        count = list(range(len(self.meshes)))
+        for i in count: 
+            self.renderer.Render(self.meshes[i])
+        self.renderer.SaveImage()
+        return
     
 
     def InitializeCamera (self) :
@@ -136,93 +141,50 @@ class Scene () :
                                        
         return    
     
-    def projectVertices (self) :
+    
+    def calculateWorldBoundaries (self) :
 
-        maxRenderX = 0
-        minRenderX = 0
-        maxRenderY = 0
-        minRenderY = 0
+        maxX = 0
+        minX = 0
+        maxY = 0
+        minY = 0
+        maxZ = 0
+        minZ = 0
 
-        """transform to camera coordinates and project each control point of each mesh"""
+        boundaries = []
+        
         for k in range(len(self.meshes)):       
             m = self.meshes[k]
             count = range(len(m.controlPoints))
             for i in count:       
-                """controlPoints local->world space, not here, cause we have already culled them"""
-                """m.controlPoints[i] = vectorDotMatrix(m.controlPoints[i], m.transform)"""
-                """controlPoints world->camera space"""                         
-                m.controlPoints[i] = MyMaths.vectorDotMatrix(m.controlPoints[i], self.worldToCamera)
-                
-                m.controlPoints[i] = [m.controlPoints[i][0], -m.controlPoints[i][1], m.controlPoints[i][2]]
-                """check projected boundaries"""
-                if (m.controlPoints[i][0] > maxRenderX) :
-                    maxRenderX = m.controlPoints[i][0]
-                if (m.controlPoints[i][0] < minRenderX) :
-                    minRenderX = m.controlPoints[i][0]
-                if (m.controlPoints[i][1] > maxRenderY) :
-                    maxRenderY = m.controlPoints[i][1]
-                if (m.controlPoints[i][1] < minRenderY) :
-                    minRenderY = m.controlPoints[i][1]
+                #control points must be in world coordinates
+                """check boundaries"""
+                if (m.controlPoints[i][0] > maxX) :
+                    maxX = m.controlPoints[i][0]
+                if (m.controlPoints[i][0] < minX) :
+                    minX = m.controlPoints[i][0]
+                if (m.controlPoints[i][1] > maxY) :
+                    maxY = m.controlPoints[i][1]
+                if (m.controlPoints[i][1] < minY) :
+                    minY = m.controlPoints[i][1]
+                if (m.controlPoints[i][2] > maxZ) :
+                    maxZ = m.controlPoints[i][2]
+                if (m.controlPoints[i][2] < minZ) :
+                    minZ = m.controlPoints[i][2]
 
-        renderXRange = maxRenderX - minRenderX
-        renderYRAnge = maxRenderY - minRenderY
+        boundaries.append([maxX, maxY, maxZ, 1])
+        boundaries.append([maxX, minY, maxZ, 1]) 
+        boundaries.append([minX, maxY, maxZ, 1])
+        boundaries.append([minX, minY, maxZ, 1])
 
-
-        for k in range(len(self.meshes)):       
-            m = self.meshes[k]
-            count = range(len(m.controlPoints))
-            for i in count:             
-                """normalize respect the image size and adapt to svg coordinates (Y axis inverted)"""
-                m.controlPoints[i] = [m.controlPoints[i][0] - minRenderX, m.controlPoints[i][1] - minRenderY, m.controlPoints[i][2]]
-                m.controlPoints[i] = [m.controlPoints[i][0]/renderXRange*self.imageWidth, m.controlPoints[i][1]/renderYRAnge*self.imageHeight, m.controlPoints[i][2]]
-        return     
-
-    def calculatePolygons(self) :
-        for k in range(len(self.meshes)):       
-            m = self.meshes[k]
-            count = range(len(m.vertexIndicesArray))
-            for i in count:   
-                _myPolygon = MyPolygon()
-                _myPolygon.mesh = k
-                _myPolygon.vertexIndicesArray = m.vertexIndicesArray[i]
-                z1 = m.controlPoints[_myPolygon.vertexIndicesArray[0]][2]
-                z2 = m.controlPoints[_myPolygon.vertexIndicesArray[1]][2]
-                z3 = m.controlPoints[_myPolygon.vertexIndicesArray[2]][2]
-                _myPolygon.depth = (z1 + z2 + z3)/3 
-                self.polygons.append(_myPolygon)
-
-    def sortPolygons(self) :
-        self.sortedPolygons =  sorted(self.polygons, key=lambda poly: poly.depth, reverse=False)                    
-    
-    def drawPolygons(self) :
-        dwg = svgwrite.Drawing('render.svg' ,size=(self.imageWidth, self.imageHeight))
-        """background"""
-        """dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(255,255,255)'))"""            
+        boundaries.append([maxX, maxY, minZ, 1])
+        boundaries.append([maxX, minY, minZ, 1])
+        boundaries.append([minX, maxY, minZ, 1])
+        boundaries.append([minX, minY, minZ, 1])                 
         
-        #evaluate color on a point of an image
-        im = Image.open("Wood.jpg") #255x255 px
-        imData = im.getdata()
-        color = {}
-        color = imData[0]
+        return boundaries        
 
-        
-        for i in range(len(self.sortedPolygons)):
-            polygon = svgwrite.shapes.Polygon()
-            m = self.sortedPolygons[i].mesh
-            for j in range(0,3) :            
-                """take the corresponding control points for forming this polygon"""
-                p = self.meshes[m].controlPoints[self.sortedPolygons[i].vertexIndicesArray[j]]
-                p = [p[0], p[1]]
-                polygon.points.append(p) 
-                s = "rgb("+str(color[0])+","+str(color[1])+","+str(color[2])+")"
-                polygon.fill(s)            
-                                   
-            dwg.add(polygon)
-        dwg.save()   
     
-    
-    
-
 class MyMesh() :    
 
     transform = [[ 1, 0, 0, 0],
@@ -250,3 +212,4 @@ class MyPolygon() :
         mesh = 0        
         vertexIndicesArray = []
         depth = 0
+
