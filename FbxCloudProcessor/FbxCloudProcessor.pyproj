@@ -23,6 +23,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FbxCloudProcessor.py" />
+    <Compile Include="MyMaths.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MyScene.py" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

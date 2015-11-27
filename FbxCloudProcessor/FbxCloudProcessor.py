@@ -1,4 +1,4 @@
-import time
+﻿import time
 import BaseHTTPServer
 import json
 
@@ -6,9 +6,11 @@ import sys
 import fbx
 import svgwrite
 import urllib2
-import math
-import urllib2
 
+import MyMaths
+import MyScene
+
+from PIL import Image   
 
 class MyMesh() :    
 
@@ -36,10 +38,7 @@ class MyPolygon() :
     def __init__(self):
         mesh = 0        
         vertexIndicesArray = []
-        depth = 0
-    
-        
-    
+        depth = 0 
  
 class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
@@ -88,74 +87,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     root = scene.GetRootNode() 
 
-    """MATHS"""
-
-    def transposeMatrix (matrix) :
-
-        """from 'python cookbook' """
-        t = [[r[col] for r in matrix] for col in range(len(matrix[0]))] 
-
-        return t
-
-    def vectorDotMatrix (vector, matrix) :
-
-        result = [0] * 4
-        for i in range(4) :
-            result[i] = vector[0] * matrix[0][i] + vector[1] * matrix[1][i] + vector[2] * matrix[2][i] + vector[3] * matrix[3][i]
-        
-        return result
-
-    def matrixDotMatrix (m1, m2) :
-        result = [[ 1, 0, 0, 0],
-                  [ 0, 1, 0, 0],
-                  [ 0, 0, 1, 0],
-                  [ 0, 0, 0, 0]]
-        for i in range(4) :
-            for j in range(4) :
-                result[i][j] = m1[i][0] * m2[0][j] + m1[i][1] * m2[1][j] + m1[i][2] * m2[2][j] + m1[i][3] * m2[3][j];
-        return result
-
-    def rotateMatrix (matrix, Yaw, Pitch, Roll) :
-
-        y = Yaw * math.pi/180;
-        x = Pitch * math.pi/180;
-        z = Roll * math.pi/180;
-        result = matrix
-
-        yawRotationMatrix = [[ math.cos(y), 0, -math.sin(y), 0],
-                            [ 0, 1, 0, 0],
-                            [ math.sin(y), 0, math.cos(y), 0],
-                            [ 0, 0, 0, 0]]
-        result = matrixDotMatrix(result, yawRotationMatrix);
-
-        pitchRotationMatrixLocal = [[ 1, 0, 0, 0],
-                            [ 0, math.cos(x), math.sin(x), 0],
-                            [ 0, -math.sin(x), math.cos(x), 0],
-                            [ 0, 0, 0, 0]]
-        """F(g->g) = I(g->l) * F(l->l) * I(l->g) . Transform local->local rotation to global->global"""
-        pitchRotationMatrixGlobal = matrixDotMatrix(matrixDotMatrix(transposeMatrix(result), pitchRotationMatrixLocal), result)
-        result = matrixDotMatrix(result, pitchRotationMatrixGlobal);
-
-        rollRotationMatrixLocal = [[ math.cos(z), math.sin(z), 0, 0],
-                            [ -math.sin(z), math.cos(z), 0, 0],
-                            [ 0, 0, 1, 0],
-                            [ 0, 0, 0, 0]]
-        rollRotationMatrixGlobal = matrixDotMatrix(matrixDotMatrix(transposeMatrix(result), rollRotationMatrixLocal), result)
-        result = matrixDotMatrix(result, rollRotationMatrixGlobal);        
-
-        return result
-
-    def interpolate3Vectors(v1, v2, v3) :
-        result = [0, 0, 0, 0]
-        for i in range(4):
-            result[i] = (v1[i] + v2[i] + v3[i])/3
-        return result
-
-    def vector4ScalarProduct (v1, v2) :
-        result = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
-        return result;
-
-    """END MATHS"""
+    
 
     cameraToWorld = [[ 1, 0, 0, 0],
                      [ 0, 1, 0, 0],
@@ -163,8 +95,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                      [ 0, 0, 0, 0]]    
     """rotate the camera to have an isometric point of view"""
     """careful: right handed euler rotation"""
-    cameraToWorld = rotateMatrix(cameraToWorld, 45, -45, 0)
-    worldToCamera = transposeMatrix(cameraToWorld)   
+    cameraToWorld = MyMaths.rotateMatrix(cameraToWorld, 45, -45, 0)
+    worldToCamera = MyMaths.transposeMatrix(cameraToWorld)   
 
     meshes = []
 
@@ -184,7 +116,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         for i in count:
             p = [cPoints[i][0], cPoints[i][1], cPoints[i][2], 1]  
             """apply their global rotation"""
-            p = vectorDotMatrix(p, m.transform)          
+            p = MyMaths.vectorDotMatrix(p, m.transform)          
             m.controlPoints.append(p)
 
         polygonCount = mesh.GetPolygonCount()
@@ -201,12 +133,12 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 normal = fbx.FbxVector4()
                 mesh.GetPolygonVertexNormal(i, j, normal) 
                 """ rotate the normals too for culling purposes """ 
-                normal = vectorDotMatrix(normal, m.transform)                  
+                normal = MyMaths.vectorDotMatrix(normal, m.transform)                  
                 _normals.append([normal[0], normal[1], normal[2], normal[3]])
 
             """Here we have the normals of the 3 vertices. Interpolate and compare with the camera z vector"""
-            interpolatedNormal = interpolate3Vectors(_normals[0], _normals[1], _normals[2])
-            if (vector4ScalarProduct(interpolatedNormal, cameraToWorld[2]) > 0) :
+            interpolatedNormal = MyMaths.interpolate3Vectors(_normals[0], _normals[1], _normals[2])
+            if (MyMaths.vector4ScalarProduct(interpolatedNormal, cameraToWorld[2]) > 0) :
                 m.vertexIndicesArray.append(_indices)
 
         meshes.append(m)        
@@ -220,7 +152,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         maxRenderY = 0
         minRenderY = 0
 
-        """transform to word coordinates and project each control point of each mesh"""
+        """transform to camera coordinates and project each control point of each mesh"""
         for k in range(len(meshes)):       
             m = meshes[k]
             count = range(len(m.controlPoints))
@@ -228,7 +160,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 """controlPoints local->world space, not here, cause we have already culled them"""
                 """m.controlPoints[i] = vectorDotMatrix(m.controlPoints[i], m.transform)"""
                 """controlPoints world->camera space"""                         
-                m.controlPoints[i] = vectorDotMatrix(m.controlPoints[i], worldToCamera)
+                m.controlPoints[i] = MyMaths.vectorDotMatrix(m.controlPoints[i], worldToCamera)
                 
                 m.controlPoints[i] = [m.controlPoints[i][0], -m.controlPoints[i][1], m.controlPoints[i][2]]
                 """check projected boundaries"""
@@ -292,24 +224,14 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def drawPolygons() :
         dwg = svgwrite.Drawing('render.svg' ,size=(imageWidth, imageHeight))
         """background"""
-        """dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(255,255,255)'))"""         
-
-        """transform = "[[ 1, 0, 0, 0],[ 0, 1, 0, 0],[ 0, 0, 1, 0],[ 0, 0, 0, 0]]"
-        transform = rotateMatrix(transform, 0, 45, 45)"""
-
-        transform = svgwrite.mixins.Transform()
+        """dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(255,255,255)'))"""            
         
+        #evaluate color on a point of an image
+        im = Image.open("Wood.jpg") #255x255 px
+        imData = im.getdata()
+        color = {}
+        color = imData[0]
 
-        pattern = dwg.pattern(size=(20, 20), patternTransform = "rotate(45)")
-        
-        pattern['id'] = 'testPattern'        
-        image = dwg.image("checker.png", insert=(0, 0), size=(20, 20))
-        pattern.add(image)
-        
-        
-        """pattern['transform'] = "rotate(0 0 45)"""
-
-        dwg.defs.add(pattern)
         
         for i in range(len(sortedPolygons)):
             polygon = svgwrite.shapes.Polygon()
@@ -319,8 +241,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 p = meshes[m].controlPoints[sortedPolygons[i].vertexIndicesArray[j]]
                 p = [p[0], p[1]]
                 polygon.points.append(p) 
-                polygon.fill("rgb(0, 0, 255)")          
-            """polygon.fill(pattern)"""
+                s = "rgb("+str(color[0])+","+str(color[1])+","+str(color[2])+")"
+                polygon.fill(s)            
                                    
             dwg.add(polygon)
         dwg.save()            
