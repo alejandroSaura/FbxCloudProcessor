@@ -20,8 +20,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
      
     print "request received"
 
-    imageWidth = 500
-    imageHeight = 500    
+    imageWidth = 100
+    imageHeight = 100   
 
     path = s.path    
     filepath = path[1:]   

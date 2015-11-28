@@ -67,6 +67,9 @@ def vector4ScalarProduct (v1, v2) :
     result = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
     return result;
 
+def vector2ScalarProduct(vec_a, vec_b):
+    return (vec_a[0] * vec_b[0] + vec_a[1] * vec_b[1])
+
 
 
 

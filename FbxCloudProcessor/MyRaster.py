@@ -1,4 +1,4 @@
-from __future__ import division
+﻿from __future__ import division
 
 from PIL import Image
 
@@ -34,7 +34,7 @@ texture = Image.open('Assets/check.PNG')
 draw_triangle(indices[0], indices[1], indices[2])
 
 #Save the frame
-im.save("Assets/test.PNG")
+im.save("Assets/check.PNG")
 
 
 

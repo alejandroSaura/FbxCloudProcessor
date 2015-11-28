@@ -2,11 +2,15 @@
 import MyMaths
 import MyScene
 from PIL import Image 
+import math
 
 #This class receives a mesh with control points [on world space] and the camera transform 
 class Renderer:
 
-    dwg = {}
+    image = {}
+    zRender = {}
+
+    depthBuffer = []
 
     imageWidth = 0
     imageHeight = 0
@@ -44,7 +48,14 @@ class Renderer:
         self.minProjY = 0
         self.minZ = 0
 
-        self.dwg = svgwrite.Drawing('render.svg' ,size=(self.imageWidth, self.imageHeight))
+        #This will be the render target
+        self.image = Image.new('RGB', (width, height))
+        self.zRender = Image.new('RGB', (self.imageWidth, self.imageHeight))
+
+        # TO-DO: change the camera to perspective and initialize this array with -1s
+        # Creates a list containing 5 lists initialized to 2
+        self.depthBuffer = [[2 for x in range(width)] for x in range(height)]
+        
 
 
     def Render(self, _mesh) :
@@ -54,6 +65,10 @@ class Renderer:
         self.calculatePolygons()
         self.sortPolygons()
         self.drawPolygons()
+
+        #For debugging purposes
+        self.renderZBuffer()
+        
             
 
     def SetCamera (self, _worldToCamera) :
@@ -112,9 +127,9 @@ class Renderer:
             self.mesh.controlPoints[i] = MyMaths.vectorDotMatrix(self.mesh.controlPoints[i], self.worldToCamera)                
             self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0], -self.mesh.controlPoints[i][1], self.mesh.controlPoints[i][2]]
 
-            """normalize respect the image size and adapt to svg coordinates (Y axis inverted)"""
-            self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0] - self.minProjX, self.mesh.controlPoints[i][1] - self.minProjY, self.mesh.controlPoints[i][2]]
-            self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0]/self.renderXRange*self.imageWidth, self.mesh.controlPoints[i][1]/self.renderYRange*self.imageHeight, self.mesh.controlPoints[i][2]/self.ZRange]
+            """normalize respect the image size and adapt to screen coordinates (Y axis inverted)"""
+            self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0] - self.minProjX, self.mesh.controlPoints[i][1] - self.minProjY, self.mesh.controlPoints[i][2] - self.minZ]
+            self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0]/self.renderXRange*self.imageWidth, self.mesh.controlPoints[i][1]/self.renderYRange*self.imageHeight, (self.mesh.controlPoints[i][2])/self.ZRange]
             
         return         
 
@@ -137,29 +152,131 @@ class Renderer:
     def drawPolygons(self) :
         
         """background"""
-        """dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(255,255,255)'))"""            
+        """dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(255,255,255)'))"""          
         
-        #evaluate color on a point of an image
-        im = Image.open("Wood.jpg") #255x255 px
-        imData = im.getdata()
-        color = {}
-        color = imData[0]
+        #TO-DO: replace this with the real texture
+        texture = Image.open('Assets/check.PNG')
+                
+        for i in range(len(self.sortedPolygons)):   
+            
+            #Control points in screen space
+            a = self.mesh.controlPoints[self.sortedPolygons[i].vertexIndicesArray[0]]
+            b = self.mesh.controlPoints[self.sortedPolygons[i].vertexIndicesArray[1]]
+            c = self.mesh.controlPoints[self.sortedPolygons[i].vertexIndicesArray[2]]             
+            
+            #TO-DO: replace this with the real polygon uvs
+            uvs = []
+            uvs.append([0.0, 0.0])
+            uvs.append([1.0, 0.00])
+            uvs.append([0.5, 0.25])
 
-        
-        for i in range(len(self.sortedPolygons)):
-            polygon = svgwrite.shapes.Polygon()           
+            #Get the triangle boundaries
+            max_x = int(max(a[0], max(b[0], c[0])))+1
+            min_x = int(min(a[0], min(b[0], c[0])))-1
+            max_y = int(max(a[1], max(b[1], c[1])))+1
+            min_y = int(min(a[1], min(b[1], c[1])))-1
+
+            #Scan the pixels inside the boundaries rectangle
+            for x in range (min_x, max_x):
+                for y in range (min_y, max_y):
+                    check = self.is_point_in_tri([x, y], a, b, c)
+                    if check[0]:
+                        #interpolate vertex parameters
+                        uv = self.get_frag_uvs([check[1], check[2], check[3]], [uvs[0], uvs[1], uvs[2]])  
+                        depth = self.get_frag_depth([check[1], check[2], check[3]], [a[2],b[2],c[2]])
+                        
+                        #check z-buffer before writing on the image
+                        check = self.depthBuffer[x][y] < depth
+                        if check :
+                            hi = 5
+                        if (self.depthBuffer[x][y] == 2 or self.depthBuffer[x][y] < depth) :
+                            self.depthBuffer[x][y] = depth
+                            (width, height) = texture.size                      
+                            color = texture.getpixel((uv[0] * width, uv[1] * height))
+                            self.draw_pixel(x, y, color)
+
+
+            #Painting in SVG format
+            """polygon = svgwrite.shapes.Polygon()
+               
             for j in range(0,3) :            
-                """take the corresponding control points for forming this polygon"""
+                #take the corresponding control points for forming this polygon
                 p = self.mesh.controlPoints[self.sortedPolygons[i].vertexIndicesArray[j]]
                 p = [p[0], p[1]]
                 polygon.points.append(p) 
                 s = "rgb("+str(color[0])+","+str(color[1])+","+str(color[2])+")"
                 polygon.fill(s)       
                                    
-            self.dwg.add(polygon)
+            self.dwg.add(polygon)"""
+
+    def draw_pixel(self, x, y, color):
+        
+        self.image.putpixel((x, y), color)
+        return
 
     def SaveImage(self) :
 
-        self.dwg.save()
+        #Save the frame
+        self.image.save("Assets/render.PNG")
+        self.zRender.save("Assets/renderZBuffer.PNG")
+
+
+    def renderZBuffer(self) :        
+
+        countRow = range(0, self.imageHeight)
+        for j in countRow :
+            countColumn = range(0, self.imageWidth)
+            for i in countColumn :
+                color = (0, 0, 0)
+                if (self.depthBuffer[i][j] == 2) :
+                   color = (0, 0, 0)
+                else:
+                   factor = int(self.depthBuffer[i][j] * 255) #depth between 0-1
+                   color = (factor, factor, factor)
+                
+                self.zRender.putpixel((i, j), color)
+                        
+        return
+
+
+    #Returns a 4-value tuple with:
+    #[0] = boolean stating wether the point is inside the triangle or not
+    #[1, 2, 3] = barycentric coords of the point
+    def is_point_in_tri(self, P, A, B, C):
+
+        #Compute vectors        
+        v0 = [C[0] - A[0], C[1] - A[1]]
+        v1 = [B[0] - A[0], B[1] - A[1]]
+        v2 = [P[0] - A[0], P[1] - A[1]]
+    
+        #Compute dot products
+        dot00 = MyMaths.vector2ScalarProduct(v0, v0)
+        dot01 = MyMaths.vector2ScalarProduct(v0, v1)
+        dot02 = MyMaths.vector2ScalarProduct(v0, v2)
+        dot11 = MyMaths.vector2ScalarProduct(v1, v1)
+        dot12 = MyMaths.vector2ScalarProduct(v1, v2)
+
+        #Compute barycentric coordinates
+        invDenom = 1 / (dot00 * dot11 - dot01 * dot01)
+        u = (dot11 * dot02 - dot01 * dot12) * invDenom
+        v = (dot00 * dot12 - dot01 * dot02) * invDenom
+
+        #Check if point is in triangle and return the barycentric coords
+        return [(u >= 0) and (v >= 0) and (u + v < 1), u, v, 1 - u - v]
+
+
+    def get_frag_uvs(self, bar_coords, uvs):
+
+        u = bar_coords[0] * uvs[0][0] + bar_coords[1] * uvs[1][0] + bar_coords[2] * uvs[2][0]
+        v = bar_coords[0] * uvs[0][1] + bar_coords[1] * uvs[1][1] + bar_coords[2] * uvs[2][1]
+
+        return [u, v]
+
+
+    def get_frag_depth(self, bar_coords, depths):
+
+        result = bar_coords[0] * depths[0] + bar_coords[1] * depths[1] + bar_coords[2] * depths[2]        
+
+        return result
 
 
