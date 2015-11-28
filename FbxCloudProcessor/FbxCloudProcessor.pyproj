@@ -26,6 +26,9 @@
     <Compile Include="MyMaths.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MyRaster.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="MyScene.py" />
   </ItemGroup>
   <PropertyGroup>
