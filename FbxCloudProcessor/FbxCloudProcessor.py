@@ -20,8 +20,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
      
     print "request received"
 
-    imageWidth = 100
-    imageHeight = 100   
+    imageWidth = 500
+    imageHeight = 500   
 
     path = s.path    
     filepath = path[1:]   
@@ -39,7 +39,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     renderer = MyRenderer.Renderer(imageWidth, imageHeight)
 
     scene = MyScene.Scene()        
-    scene.InitializeScene("TestMesh.fbx", renderer)  
+    scene.InitializeScene("TestMesh02.fbx", renderer)  
     scene.Render()
 
     s.send_response(200)

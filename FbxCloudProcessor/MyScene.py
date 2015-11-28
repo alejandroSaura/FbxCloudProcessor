@@ -67,13 +67,13 @@ class Scene () :
 
     def InitializeCamera (self) :
 
-        cameraToWorld = [[ 1, 0, 0, 0],
+        self.cameraToWorld = [[ 1, 0, 0, 0],
                          [ 0, 1, 0, 0],
                          [ 0, 0, 1, 0],
                          [ 0, 0, 0, 0]]    
         """rotate the camera to have an isometric point of view"""
         """careful: right handed euler rotation"""
-        self.cameraToWorld = MyMaths.rotateMatrix(cameraToWorld, 45, -45, 0)
+        self.cameraToWorld = MyMaths.rotateMatrix(self.cameraToWorld, 45, -45, 0)        
         self.worldToCamera = MyMaths.transposeMatrix(self.cameraToWorld) 
 
 
@@ -111,7 +111,10 @@ class Scene () :
         for i in count:
             p = [cPoints[i][0], cPoints[i][1], cPoints[i][2], 1]  
             """apply their global rotation"""
-            p = MyMaths.vectorDotMatrix(p, m.transform)          
+
+            #m.transform is not prepared to use, rightHanded system
+
+            p = MyMaths.vectorDotMatrix(p, m.transform)                      
             m.controlPoints.append(p)
 
         polygonCount = mesh.GetPolygonCount()

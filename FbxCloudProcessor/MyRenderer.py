@@ -172,9 +172,17 @@ class Renderer:
 
             #Get the triangle boundaries
             max_x = int(max(a[0], max(b[0], c[0])))+1
+            if(max_x > self.imageWidth) :
+                max_x = self.imageWidth
             min_x = int(min(a[0], min(b[0], c[0])))-1
+            if(min_x < 0) :
+                min_x = 0
             max_y = int(max(a[1], max(b[1], c[1])))+1
+            if(max_y > self.imageHeight) :
+                max_y = self.imageHeight
             min_y = int(min(a[1], min(b[1], c[1])))-1
+            if(min_y < 0) :
+                min_y = 0
 
             #Scan the pixels inside the boundaries rectangle
             for x in range (min_x, max_x):
@@ -275,7 +283,7 @@ class Renderer:
 
     def get_frag_depth(self, bar_coords, depths):
 
-        result = bar_coords[0] * depths[0] + bar_coords[1] * depths[1] + bar_coords[2] * depths[2]        
+        result = bar_coords[0] * depths[2] + bar_coords[1] * depths[1] + bar_coords[2] * depths[0]        
 
         return result
 
