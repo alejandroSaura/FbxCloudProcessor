@@ -192,6 +192,7 @@ class MyMesh() :
                     [ 0, 0, 0, 0]]
     controlPoints = []
     vertexIndicesArray = []
+    textures = [] #paths to textures
 
     def __init__(self):
         self.transform = [[ 1, 0, 0, 0],
@@ -200,6 +201,7 @@ class MyMesh() :
                         [ 0, 0, 0, 0]]
         self.controlPoints = []
         self.vertexIndicesArray = []
+        self.textures = []
 
 class MyPolygon() :
 
