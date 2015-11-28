@@ -36,9 +36,10 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     newFile.write(object);
     newFile.close()"""  
 
-    scene = MyScene.Scene()    
-    renderer = MyRenderer.Renderer()
-    scene.InitializeScene("TestMesh02.fbx", renderer)  
+    renderer = MyRenderer.Renderer(imageWidth, imageHeight)
+
+    scene = MyScene.Scene()        
+    scene.InitializeScene("TestMesh.fbx", renderer)  
     scene.Render()
 
     s.send_response(200)

@@ -8,8 +8,8 @@ class Renderer:
 
     dwg = {}
 
-    imageWidth = 500
-    imageHeight = 500
+    imageWidth = 0
+    imageHeight = 0
 
     worldToCamera = []
     mesh = {}
@@ -25,10 +25,10 @@ class Renderer:
     minProjY = 0
     minZ = 0
 
-    def __init__(self):
+    def __init__(self, width, height):
 
-        self.imageWidth = 500
-        self.imageHeight = 500
+        self.imageWidth = width
+        self.imageHeight = height
 
         self.worldToCamera = []
         self.mesh = {}
@@ -48,12 +48,13 @@ class Renderer:
 
 
     def Render(self, _mesh) :
+
         self.mesh = _mesh
         self.projectControlPoints()
         self.calculatePolygons()
         self.sortPolygons()
         self.drawPolygons()
-
+            
 
     def SetCamera (self, _worldToCamera) :
         self.worldToCamera = _worldToCamera

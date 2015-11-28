@@ -1,4 +1,4 @@
-import fbx
+﻿import fbx
 import MyMaths
 import MyRenderer
 
@@ -8,10 +8,7 @@ from PIL import Image
 class Scene () :
     #Scene related data and functions
 
-    renderer = {}
-
-    imageWidth = 500
-    imageHeight = 500
+    renderer = {}   
 
     meshes = []    
     root = {}
@@ -19,10 +16,7 @@ class Scene () :
     cameraToWorld = []
     worldToCamera =  []
 
-    def __init__(self):
-
-        self.imageWidth = 500
-        self.imageHeight = 500
+    def __init__(self):        
 
         self.meshes = []
         self.polygons = []
@@ -55,13 +49,18 @@ class Scene () :
         self.InitializeCamera()
         self.exploreScene(root)
 
+
     def Render (self) :
+
         boundaries = self.calculateWorldBoundaries()
+        
         self.renderer.SetCamera(self.worldToCamera)
         self.renderer.SetWorldBoundaries(boundaries)
+
         count = list(range(len(self.meshes)))
         for i in count: 
             self.renderer.Render(self.meshes[i])
+
         self.renderer.SaveImage()
         return
     
