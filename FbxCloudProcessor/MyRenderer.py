@@ -170,13 +170,13 @@ class Renderer:
             
             #TO-DO: replace this with the real polygon uvs
             uvs = []
-           # uvs.append = self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[0]]
-           # uvs.append = self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[1]]
-           # uvs.append = self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[2]]
+            uvs.append(self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[0]])
+            uvs.append(self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[1]])
+            uvs.append(self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[2]])
 
-            uvs.append([0.0, 0.0])
-            uvs.append([1.0, 0.00])
-            uvs.append([0.5, 0.25])
+            #uvs.append([0.0, 0.0])
+            #uvs.append([1.0, 0.00])
+            #uvs.append([0.5, 0.25])
 
             #Get the triangle boundaries
             max_x = int(max(a[0], max(b[0], c[0])))+1
@@ -285,10 +285,10 @@ class Renderer:
 
     def get_frag_uvs(self, bar_coords, uvs):
 
-        u = bar_coords[0] * uvs[0][0] + bar_coords[1] * uvs[1][0] + bar_coords[2] * uvs[2][0]
-        v = bar_coords[0] * uvs[0][1] + bar_coords[1] * uvs[1][1] + bar_coords[2] * uvs[2][1]
+        u = bar_coords[0] * uvs[2][0] + bar_coords[1] * uvs[1][0] + bar_coords[2] * uvs[0][0]
+        v = bar_coords[0] * uvs[2][1] + bar_coords[1] * uvs[1][1] + bar_coords[2] * uvs[0][1]
 
-        return [u, v]
+        return [u, 1-v]
 
 
     def get_frag_depth(self, bar_coords, depths):

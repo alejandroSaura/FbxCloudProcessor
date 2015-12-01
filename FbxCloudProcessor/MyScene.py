@@ -114,11 +114,30 @@ class Scene () :
 
         mesh = node.GetMesh()
 
-        uvSets = []
-        mesh.GetLayerCount()
-        mesh.GetUVSetNames(uvSets)
+
+        mesh_uvs = mesh.GetLayer( 0 ).GetUVs()
+        #if( not mesh_uvs ):
+        #    continue
+
+        uvs_array = mesh_uvs.GetDirectArray()
+        uvs_count = uvs_array.GetCount()
+        
+        #if( uvs_count == 0 ):
+        #    continue
+
+        uv_values = []
+        uv_indices = []
+
+        for l in range( uvs_count ):
+            uv = uvs_array.GetAt( l )
+            uv = [ uv[ 0 ], uv[ 1 ] ]
+            uv_values.append( uv )
+
+
 
         m = MyMesh()
+
+        m.textureCoordinates = uv_values
 
         self.extractTextures(node, m.textures)
 
