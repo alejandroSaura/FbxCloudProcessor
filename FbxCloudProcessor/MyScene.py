@@ -116,14 +116,19 @@ class Scene () :
 
 
         mesh_uvs = mesh.GetLayer( 0 ).GetUVs()
-        #if( not mesh_uvs ):
-        #    continue
+
+        if( not mesh_uvs ):
+            print "Error: No UV coordinates found for the mesh"
+            return 
+
+        if( mesh_uvs.GetMappingMode() != 2 ):
+            print "Error: UV mapping mode not supported, please use EMappingMode.eByPolygonVertex"
+            return 
+
 
         uvs_array = mesh_uvs.GetDirectArray()
         uvs_count = uvs_array.GetCount()
-        
-        #if( uvs_count == 0 ):
-        #    continue
+
 
         uv_values = []
         uv_indices = []
