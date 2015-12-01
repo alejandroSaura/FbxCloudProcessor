@@ -175,9 +175,8 @@ class Renderer:
             #Control points in screen space
             a = self.mesh.controlPoints[self.sortedPolygons[i].vertexIndicesArray[0]]
             b = self.mesh.controlPoints[self.sortedPolygons[i].vertexIndicesArray[1]]
-            c = self.mesh.controlPoints[self.sortedPolygons[i].vertexIndicesArray[2]]             
+            c = self.mesh.controlPoints[self.sortedPolygons[i].vertexIndicesArray[2]]         
             
-            #TO-DO: replace this with the real polygon uvs
             uvs = []
             uvs.append(self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[0]])
             uvs.append(self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[1]])
