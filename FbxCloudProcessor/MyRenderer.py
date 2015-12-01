@@ -29,6 +29,8 @@ class Renderer:
     minProjY = 0
     minZ = 0
 
+    colorBuffer = []
+
     def __init__(self, width, height):
 
         self.imageWidth = width
@@ -56,6 +58,8 @@ class Renderer:
         # Creates a list containing 5 lists initialized to 2
         self.depthBuffer = [[2 for x in range(width)] for x in range(height)]
         
+        self.colorBuffer = [(0,0,0) for x in range(width * height)]
+
 
 
     def Render(self, _mesh) :
@@ -148,14 +152,14 @@ class Renderer:
 
     def sortPolygons(self) :
         self.sortedPolygons =  sorted(self.polygons, key=lambda poly: poly.depth, reverse=False)                    
-    
+
     def drawPolygons(self) :
         
         """background"""
         """dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(255,255,255)'))"""          
         
         #TO-DO: replace this with the real texture
-        texture = Image.open('Assets/check.PNG')
+        texture = Image.open(self.mesh.textures[0])
                 
         for i in range(len(self.sortedPolygons)):   
             
@@ -166,6 +170,10 @@ class Renderer:
             
             #TO-DO: replace this with the real polygon uvs
             uvs = []
+           # uvs.append = self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[0]]
+           # uvs.append = self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[1]]
+           # uvs.append = self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[2]]
+
             uvs.append([0.0, 0.0])
             uvs.append([1.0, 0.00])
             uvs.append([0.5, 0.25])
@@ -219,12 +227,14 @@ class Renderer:
 
     def draw_pixel(self, x, y, color):
         
-        self.image.putpixel((x, y), color)
+        #self.image.putpixel((x, y), color)
+        self.colorBuffer[y * self.imageWidth + x] = color
         return
 
     def SaveImage(self) :
 
         #Save the frame
+        self.image.putdata(self.colorBuffer)
         self.image.save("Assets/render.PNG")
         self.zRender.save("Assets/renderZBuffer.PNG")
 

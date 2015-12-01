@@ -14,8 +14,6 @@ import MyRenderer
  
 class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
- 
-
   def do_GET(s):
      
     print "request received"
@@ -50,5 +48,18 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     """s.wfile.write("<p>Vertex count: %s</p>" % (vertexCount))"""    
     s.wfile.write("</body></html>")
 
-httpd = BaseHTTPServer.HTTPServer(("localhost", 8000), MyHandler)
-httpd.serve_forever()
+#httpd = BaseHTTPServer.HTTPServer(("localhost", 8000), MyHandler)
+#httpd.serve_forever()
+
+
+imageWidth = 500
+imageHeight = 500   
+ 
+
+renderer = MyRenderer.Renderer(imageWidth, imageHeight)
+
+scene = MyScene.Scene()        
+scene.InitializeScene("Assets/TestMesh.fbx", renderer)  
+print "Starting render..."
+scene.Render()
+print "Render finished..."

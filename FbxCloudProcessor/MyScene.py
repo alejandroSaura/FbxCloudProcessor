@@ -94,11 +94,33 @@ class Scene () :
                            
         return
 
+    def extractTextures(self, node, textureList):
+        for materialIndex in range( 0, node.GetMaterialCount() ):
+            #materialCount = node.GetMaterialCount()
+            material = node.GetMaterial( materialIndex )
+        for propertyIndex in range( 0, fbx.FbxLayerElement.sTypeTextureCount() ):
+
+            property = material.FindProperty( fbx.FbxLayerElement.sTextureChannelNames( propertyIndex ) )
+
+            for textureIndex in range( 0, property.GetSrcObjectCount( fbx.FbxFileTexture.ClassId ) ):
+
+                texture = property.GetSrcObject( fbx.FbxFileTexture.ClassId, textureIndex )
+                textureList.append(texture.GetFileName())
+                #print texture.GetFileName()
+
+
 
     def exploreMesh (self, node) :
 
         mesh = node.GetMesh()
+
+        uvSets = []
+        mesh.GetLayerCount()
+        mesh.GetUVSetNames(uvSets)
+
         m = MyMesh()
+
+        self.extractTextures(node, m.textures)
 
         fbxMatrix = fbx.FbxAMatrix()
         fbxMatrix = node.EvaluateGlobalTransform()
@@ -116,6 +138,8 @@ class Scene () :
 
             p = MyMaths.vectorDotMatrix(p, m.transform)                      
             m.controlPoints.append(p)
+            #mesh.text
+            #m.textureCoordinates.append(mesh.GetAllChannelUV
 
         polygonCount = mesh.GetPolygonCount()
         count = list(range(polygonCount))
@@ -194,6 +218,7 @@ class MyMesh() :
                     [ 0, 0, 1, 0],
                     [ 0, 0, 0, 0]]
     controlPoints = []
+    textureCoordinates = [] #uv coordinates
     vertexIndicesArray = []
     textures = [] #paths to textures
 
@@ -205,6 +230,7 @@ class MyMesh() :
         self.controlPoints = []
         self.vertexIndicesArray = []
         self.textures = []
+        self.textureCoordinates = []
 
 class MyPolygon() :
 
