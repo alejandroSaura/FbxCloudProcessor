@@ -51,7 +51,7 @@ class Scene () :
 
 
     def Render (self) :
-
+        print "Calculating world boundaries"
         boundaries = self.calculateWorldBoundaries()
         
         self.renderer.SetCamera(self.worldToCamera)
@@ -59,8 +59,10 @@ class Scene () :
 
         count = list(range(len(self.meshes)))
         for i in count: 
+            print ("Rendering mesh " + str(i))
             self.renderer.Render(self.meshes[i])
 
+        print "Saving final images"
         self.renderer.SaveImage()
         return
     

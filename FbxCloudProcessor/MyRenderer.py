@@ -1,8 +1,10 @@
-﻿import svgwrite
+﻿from __future__ import division
+import svgwrite
 import MyMaths
 import MyScene
 from PIL import Image 
 import math
+
 
 #This class receives a mesh with control points [on world space] and the camera transform 
 class Renderer:
@@ -64,10 +66,17 @@ class Renderer:
 
     def Render(self, _mesh) :
 
+        self.polygons = []
+        self.sortedPolygons = []
+
         self.mesh = _mesh
+        print 'Projecting control points'
         self.projectControlPoints()
+        print 'Calculating polygons'
         self.calculatePolygons()
+        print 'Sorting polygons'
         self.sortPolygons()
+        print 'Drawing polygons'
         self.drawPolygons()
 
         #For debugging purposes
@@ -274,8 +283,13 @@ class Renderer:
         dot11 = MyMaths.vector2ScalarProduct(v1, v1)
         dot12 = MyMaths.vector2ScalarProduct(v1, v2)
 
+        #check if denom == 0, discard if neccessary
+        denom = (dot00 * dot11 - dot01 * dot01)
+        if(denom == 0) :
+            return [False,0,0,0]
+
         #Compute barycentric coordinates
-        invDenom = 1 / (dot00 * dot11 - dot01 * dot01)
+        invDenom = 1 / denom
         u = (dot11 * dot02 - dot01 * dot12) * invDenom
         v = (dot00 * dot12 - dot01 * dot02) * invDenom
 
