@@ -189,7 +189,7 @@ class Scene () :
                 for k in range(0, indexCount) :
                     #pair = [indices[k], weights[k]]
                     bone.vertexWeightsArray[indices[k]] = weights[k]                    
-                    if(weights[k] > 0.001) : vertextBoneBindings[indices[k]].append(i)
+                    if(weights[k] != 0) : vertextBoneBindings[indices[k]].append(i)
                 bones.append(bone)
             
         return (bones, vertextBoneBindings)
@@ -333,7 +333,6 @@ class Scene () :
             poly_uvs = []
 
             """Check if the polygon is facing the camera, discard it if not""" 
-            _normals = []
 
             for j in range(0, 3): 
 
@@ -343,17 +342,17 @@ class Scene () :
                 uv_texture_index = mesh_uvs.GetIndexArray().GetAt(vertex_id)
                 poly_uvs.append( uv_texture_index )
 
-                normal = fbx.FbxVector4()
-                mesh.GetPolygonVertexNormal(i, j, normal) 
-                """ rotate the normals too for culling purposes """ 
-                normal = MyMaths.vectorDotMatrix(normal, m.transform)                  
-                _normals.append([normal[0], normal[1], normal[2], normal[3]])
-
                 vertex_id += 1
 
-            """Here we have the normals of the 3 vertices. Interpolate and compare with the camera z vector"""
-            interpolatedNormal = MyMaths.interpolate3Vectors(_normals[0], _normals[1], _normals[2])
-            if (MyMaths.vector4ScalarProduct(interpolatedNormal, self.cameraToWorld[2]) > 0) :
+            v1 = m.controlPoints[_indices[0]]
+            v2 = m.controlPoints[_indices[1]]
+            v3 = m.controlPoints[_indices[2]]
+
+            v1v2 = [v2[0]-v1[0], v2[1]-v1[1], v2[2]-v1[2], 0]
+            v1v3 = [v3[0]-v1[0], v3[1]-v1[1], v3[2]-v1[2], 1]
+
+            normal = MyMaths.vector4CrossProduct(v1v2, v1v3)
+            if (MyMaths.vector4ScalarProduct(normal, self.cameraToWorld[2]) > 0) :
                 m.vertexIndicesArray.append(_indices)
                 m.uvCoordsIndexArray.append(poly_uvs)
 
