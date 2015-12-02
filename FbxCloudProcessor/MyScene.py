@@ -189,7 +189,7 @@ class Scene () :
                 for k in range(0, indexCount) :
                     #pair = [indices[k], weights[k]]
                     bone.vertexWeightsArray[indices[k]] = weights[k]                    
-                    if(weights[k] > 0.001) : vertextBoneBindings[indices[k]].append(i)
+                    if(weights[k] != 0) : vertextBoneBindings[indices[k]].append(i)
                 bones.append(bone)
             
         return (bones, vertextBoneBindings)
@@ -224,7 +224,7 @@ class Scene () :
         
 
         #this will transform the UVs from byPolygon to byControlPoint
-        mesh.SplitPoints()
+        #mesh.SplitPoints()
 
         m = MyMesh()
         (m.bones, m.vertexBoneBindings) = self.extractSkinWeights(mesh)
@@ -234,7 +234,7 @@ class Scene () :
             print "Error: No UV coordinates found for the mesh"
             return 
 
-        if( mesh_uvs.GetMappingMode() != 1 ):
+        if( mesh_uvs.GetMappingMode() != 2 ):
             print "Error: UV mapping mode not supported, please use EMappingMode.eByPolygonVertex"
             return 
 
@@ -331,18 +331,30 @@ class Scene () :
                 _indices.append(mesh.GetPolygonVertex(i, j))
 
             """Check if the polygon is facing the camera, discard it if not""" 
-            _normals = []
-            for j in range(0, 3): 
+            #_normals = []
+            v1 = m.controlPoints[_indices[0]]
+            v2 = m.controlPoints[_indices[1]]
+            v3 = m.controlPoints[_indices[2]]
+
+            v1v2 = [v2[0]-v1[0], v2[1]-v1[1], v2[2]-v1[2], 0]
+            v1v3 = [v3[0]-v1[0], v3[1]-v1[1], v3[2]-v1[2], 1]
+
+            normal = MyMaths.vector4CrossProduct(v1v2, v1v3)
+            if (MyMaths.vector4ScalarProduct(normal, self.cameraToWorld[2]) > 0) :
+                m.vertexIndicesArray.append(_indices)
+
+            """for j in range(0, 3):              
+
                 normal = fbx.FbxVector4()
                 mesh.GetPolygonVertexNormal(i, j, normal) 
-                """ rotate the normals too for culling purposes """ 
+                #rotate the normals too for culling purposes
                 normal = MyMaths.vectorDotMatrix(normal, m.transform)                  
                 _normals.append([normal[0], normal[1], normal[2], normal[3]])
 
-            """Here we have the normals of the 3 vertices. Interpolate and compare with the camera z vector"""
+            #Here we have the normals of the 3 vertices. Interpolate and compare with the camera z vector
             interpolatedNormal = MyMaths.interpolate3Vectors(_normals[0], _normals[1], _normals[2])
             if (MyMaths.vector4ScalarProduct(interpolatedNormal, self.cameraToWorld[2]) > 0) :
-                m.vertexIndicesArray.append(_indices)
+                m.vertexIndicesArray.append(_indices)"""
 
         self.meshes.append(m)        
                                        

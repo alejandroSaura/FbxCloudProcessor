@@ -70,6 +70,14 @@ def vector4ScalarProduct (v1, v2) :
 def vector2ScalarProduct(vec_a, vec_b):
     return (vec_a[0] * vec_b[0] + vec_a[1] * vec_b[1])
 
+def vector4CrossProduct(vec_a, vec_b):
+    s1 = (vec_a[1] * vec_b[2] - vec_a[2] * vec_b[1])
+    s2 = (vec_a[2] * vec_b[0] - vec_a[0] * vec_b[2])
+    s3 = (vec_a[0] * vec_b[1] - vec_a[1] * vec_b[0])
+
+    return [s1, s2, s3, 0]
+
+
 
 
 
