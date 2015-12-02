@@ -107,7 +107,7 @@ class Scene () :
             for textureIndex in range( 0, property.GetSrcObjectCount( fbx.FbxFileTexture.ClassId ) ):
 
                 texture = property.GetSrcObject( fbx.FbxFileTexture.ClassId, textureIndex )
-                textureList.append(texture.GetFileName())
+                textureList.append(texture.GetRelativeFileName())
                 #print texture.GetFileName()
 
 
