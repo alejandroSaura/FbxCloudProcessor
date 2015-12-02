@@ -73,12 +73,12 @@ class Renderer:
 
         # TO-DO: change the camera to perspective and initialize this array with -1s
         # Creates a list containing 5 lists initialized to 2
-        self.depthBuffer = [[2 for x in range(width)] for x in range(height)]
+        self.depthBuffer = [[2 for x in range(height)] for y in range(width)]
         
         self.colorBuffer = [(0,0,0) for x in range(width * height)]
 
 
-
+    #@do_cprofile
     def Render(self, _mesh) :
 
         self.polygons = []
@@ -184,7 +184,8 @@ class Renderer:
             self.polygons.append(_myPolygon)
 
     def sortPolygons(self) :
-        self.sortedPolygons =  sorted(self.polygons, key=lambda poly: poly.depth, reverse=False)                    
+        #self.sortedPolygons =  sorted(self.polygons, key=lambda poly: poly.depth, reverse=False)                    
+        self.sortedPolygons = self.polygons
 
     def drawPolygons(self) :
         
@@ -202,9 +203,10 @@ class Renderer:
             c = self.mesh.controlPoints[self.sortedPolygons[i].vertexIndicesArray[2]]         
             
             uvs = []
-            uvs.append(self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[0]])
-            uvs.append(self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[1]])
-            uvs.append(self.mesh.textureCoordinates[self.sortedPolygons[i].vertexIndicesArray[2]])
+            uvs.append(self.mesh.textureCoordinates[self.mesh.uvCoordsIndexArray[i][0]])
+            uvs.append(self.mesh.textureCoordinates[self.mesh.uvCoordsIndexArray[i][1]])
+            uvs.append(self.mesh.textureCoordinates[self.mesh.uvCoordsIndexArray[i][2]])
+
 
             #uvs.append([0.0, 0.0])
             #uvs.append([1.0, 0.00])
@@ -212,14 +214,14 @@ class Renderer:
 
             #Get the triangle boundaries
             max_x = int(max(a[0], max(b[0], c[0])))+1
-            if(max_x > self.imageWidth) :
-                max_x = self.imageWidth
+            if(max_x >= self.imageWidth) :
+                max_x = self.imageWidth - 1
             min_x = int(min(a[0], min(b[0], c[0])))-1
             if(min_x < 0) :
                 min_x = 0
             max_y = int(max(a[1], max(b[1], c[1])))+1
-            if(max_y > self.imageHeight) :
-                max_y = self.imageHeight
+            if(max_y >= self.imageHeight) :
+                max_y = self.imageHeight - 1
             min_y = int(min(a[1], min(b[1], c[1])))-1
             if(min_y < 0) :
                 min_y = 0
@@ -295,7 +297,6 @@ class Renderer:
     #Returns a 4-value tuple with:
     #[0] = boolean stating wether the point is inside the triangle or not
     #[1, 2, 3] = barycentric coords of the point
-    #@do_cprofile
     def is_point_in_tri(self, P, A, B, C):
 
         #Compute vectors        
