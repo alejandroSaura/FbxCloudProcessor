@@ -189,7 +189,7 @@ class Scene () :
                 for k in range(0, indexCount) :
                     #pair = [indices[k], weights[k]]
                     bone.vertexWeightsArray[indices[k]] = weights[k]                    
-                    if(weights[k] != 0) : vertextBoneBindings[indices[k]].append(i)
+                    if(weights[k] > 0.001) : vertextBoneBindings[indices[k]].append(i)
                 bones.append(bone)
             
         return (bones, vertextBoneBindings)
