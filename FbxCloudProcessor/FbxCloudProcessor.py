@@ -52,8 +52,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 #httpd.serve_forever()
 
 
-imageWidth = 256
-imageHeight = 256
+imageWidth = 1920   
+imageHeight = 1080
  
 
 renderer = MyRenderer.Renderer(imageWidth, imageHeight)
