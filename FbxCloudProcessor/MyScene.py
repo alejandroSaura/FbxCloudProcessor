@@ -127,7 +127,7 @@ class Scene () :
 
         mesh = node.GetMesh() 
         if(mesh != None and (mesh.IsTriangleMesh()) == False) :
-            print "Found a mesh not triangulated"     
+            print "Found a mesh not triangulated"
 
         if(mesh != None and mesh.IsTriangleMesh()) :
             self.exploreMesh(node)            
@@ -268,13 +268,12 @@ class Scene () :
         count = list(range(len(cPoints)))
         for i in count:
             #local-space
-            p = [cPoints[i][0], cPoints[i][1], cPoints[i][2], 1]  
+            p = [cPoints[i][0], cPoints[i][1], cPoints[i][2], 1] 
+             
             #to world-space coordinates
             p = MyMaths.vectorDotMatrix(p, m.transform)
 
-
             vertexToInterpolate = [] #one per bone skinned
-
             
             if(len(m.bones) != 0) :
                 boneCount = len(m.vertexBoneBindings[i])
@@ -289,12 +288,18 @@ class Scene () :
 
                     vertex = p
 
+                    t0 = fbx.FbxTime()
+                    t0.SetFrame(0)
 
-                    boneInvTransform0 = m.bones[boneIndex].inverseBindPose
-                    myboneInvTransform0 = [[ 1, 0, 0, 0],[ 0, 1, 0, 0],[ 0, 0, 1, 0],[ 0, 0, 0, 0]]                    
+                    boneTransform0 = self.animationEvaluator.GetNodeGlobalTransform(boneNode, t0)
+                    #boneInvTransform0 = m.bones[boneIndex].inverseBindPose
+                    myboneTransform0 = [[ 1, 0, 0, 0],[ 0, 1, 0, 0],[ 0, 0, 1, 0],[ 0, 0, 0, 0]]                    
                     for y in range (0, 4) :
                         for z in range (0, 4) :
-                            myboneInvTransform0[y][z] = boneInvTransform0.Get(y, z)
+                            myboneTransform0[y][z] = boneTransform0.Get(y, z)
+
+                    
+                    
 
                     pInBoneCoords0 = MyMaths.vectorDotMatrix(vertex, myboneInvTransform0)
                     
