@@ -236,7 +236,10 @@ class Renderer:
     def draw_pixel(self, x, y, color):
         
         #self.image.putpixel((x, y), color)
+        #depthFactor = self.depthBuffer[x][y]
+        #self.colorBuffer[y * self.imageWidth + x] = (int(color[0] * depthFactor), int(color[1] * depthFactor), int(color[2] * depthFactor), int(color[3] * depthFactor))
         self.colorBuffer[y * self.imageWidth + x] = color
+
         return
 
     def SaveImage(self) :

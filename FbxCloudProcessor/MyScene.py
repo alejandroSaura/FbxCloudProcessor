@@ -8,21 +8,31 @@ from PIL import Image
 class Scene () :
     #Scene related data and functions
 
+    scene = {}
+
     renderer = {}   
+    time = {}
+    animationEvaluator = {}
 
     meshes = []    
     root = {}
+    
 
     cameraToWorld = []
     worldToCamera =  []
 
-    def __init__(self):        
+    def __init__(self):   
+        
+        self.scene = {}     
+
+        self.time = {}
+        self.animationEvaluator = {}
 
         self.meshes = []
         self.polygons = []
         self.sortedPolygons = []
         self.root = {}
-
+        
         self.cameraToWorld = []
         self.worldToCamera =  []
 
@@ -30,6 +40,9 @@ class Scene () :
 
 
     def InitializeScene (self, fileName, _renderer) :
+
+        self.time = fbx.FbxTime()
+        self.time.SetFrame(50)
 
         self.renderer = _renderer
         manager = fbx.FbxManager.Create()
@@ -40,15 +53,26 @@ class Scene () :
             #print 'Error: %s' % importer.GetLastErrorString()
             sys.exit()
 
-        fbxScene = fbx.FbxScene.Create( manager, 'myScene')
-        importer.Import(fbxScene)
+        self.scene = fbx.FbxScene.Create( manager, 'myScene')      
+
+        importer.Import(self.scene)
         importer.Destroy()
+                
+
+        #Import animation if it exists        
+        #We are insterested only in the first stack and first layer (import simple animations)
         
-        root = fbxScene.GetRootNode() 
+        animationStack = self.scene.GetCurrentAnimationStack()
+        self.animationLayer = animationStack.GetMember(fbx.FbxAnimLayer.ClassId, 0)
 
+        #Other approach, evaluator:
+        
+        self.animationEvaluator = self.scene.GetAnimationEvaluator()
+
+        self.root = self.scene.GetRootNode() 
         self.InitializeCamera()
-        self.exploreScene(root)
-
+        self.exploreScene(self.root) 
+        
 
     def Render (self) :
         print "Calculating world boundaries"
@@ -81,8 +105,27 @@ class Scene () :
 
     def exploreScene(self, node) :   
 
-        mesh = node.GetMesh()  
-          
+        """animationCurve = node.LclTranslation.GetCurve(self.animationLayer)
+        if(animationCurve != None) :
+            print 'animation curve found'
+            curveEvaluation = animationCurve.Evaluate(self.time)"""
+
+        
+
+        """ Useless
+        #for other objects -> Set their local transform here for t=x
+        transform = self.animationEvaluator.GetNodeLocalTransform(node, self.time)
+        #translate
+        locTrans = transform.GetRow(3)
+        pos3 = fbx.FbxDouble3(locTrans[0], locTrans[1], locTrans[2])        
+        node.LclTranslation.Set(pos3)
+        #rotate
+        locRot = transform.GetR()
+        rot3 = fbx.FbxDouble3(locRot[0], locRot[1], locRot[2])
+        node.LclRotation.Set(rot3)
+        """
+
+        mesh = node.GetMesh() 
         if(mesh != None and (mesh.IsTriangleMesh()) == False) :
             print "Found a mesh not triangulated"     
 
@@ -95,6 +138,64 @@ class Scene () :
             self.exploreScene(node.GetChild(i))   
                            
         return
+
+    def extractSkinWeights (self, mesh) :
+
+        bones = []
+        vertextBoneBindings = []
+        for c in range(0,mesh.GetControlPointsCount()) :
+            vertextBoneBindings.append([])
+
+        deformersCount = mesh.GetDeformerCount()
+        if(deformersCount == 0) :
+            return ([], [])
+        deformer = mesh.GetDeformer(0)
+
+        defType = deformer.GetDeformerType()
+        if (defType == 1) : #0 - unkwown, 1 - skin
+            print 'skin modifier found'
+            clusterCount = deformer.GetClusterCount()
+            for i in range(0,clusterCount) :
+                cluster = deformer.GetCluster(i)
+                lClusterMode = cluster.GetLinkMode()
+                boneName = cluster.GetLink().GetName();
+
+                # matrices for bind and inverse bind
+                kLinkMatrix = fbx.FbxAMatrix()
+                cluster.GetTransformLinkMatrix(kLinkMatrix)
+
+                kTM = fbx.FbxAMatrix()
+                cluster.GetTransformMatrix(kTM);
+
+                kInvLinkMatrix = fbx.FbxAMatrix()
+                kInvLinkMatrix = kLinkMatrix.Inverse()
+
+                kM = fbx.FbxAMatrix()
+                kM = kInvLinkMatrix * kTM
+                
+
+                indexCount = cluster.GetControlPointIndicesCount() #here, count vertex, not indices
+                indices = cluster.GetControlPointIndices()
+                weights = cluster.GetControlPointWeights()
+                
+                bone = MyBone()
+                bone.name = boneName
+
+                bone.bindPoseMAtrix = kLinkMatrix
+                bone.inverseBindPose = kInvLinkMatrix
+
+                bone.vertexWeightsArray = [0] * mesh.GetControlPointsCount()                         
+
+                for k in range(0, indexCount) :
+                    #pair = [indices[k], weights[k]]
+                    bone.vertexWeightsArray[indices[k]] = weights[k]                    
+                    if(weights[k] != 0) : vertextBoneBindings[indices[k]].append(i)
+                bones.append(bone)
+            
+        return (bones, vertextBoneBindings)
+	
+	    
+
 
     def extractTextures(self, node, textureList):
         for materialIndex in range( 0, node.GetMaterialCount() ):
@@ -113,14 +214,22 @@ class Scene () :
 
 
     def exploreMesh (self, node) :
+        """
+        if node.GetName() == 'Bone002' :
+            print 'test bone'
+        """
 
-        mesh = node.GetMesh()
+        mesh = node.GetMesh()          
+
+        
 
         #this will transform the UVs from byPolygon to byControlPoint
         mesh.SplitPoints()
 
-        mesh_uvs = mesh.GetLayer( 0 ).GetUVs()
+        m = MyMesh()
+        (m.bones, m.vertexBoneBindings) = self.extractSkinWeights(mesh)
 
+        mesh_uvs = mesh.GetLayer( 0 ).GetUVs()
         if( not mesh_uvs ):
             print "Error: No UV coordinates found for the mesh"
             return 
@@ -132,40 +241,86 @@ class Scene () :
 
         uvs_array = mesh_uvs.GetDirectArray()
         uvs_count = uvs_array.GetCount()
-
-
         uv_values = []
         uv_indices = []
 
         for k in range( uvs_count ):
             uv = uvs_array.GetAt( k )
             uv = [ uv[ 0 ], uv[ 1 ] ]
-            uv_values.append( uv )
+            uv_values.append( uv )       
 
 
-
-        m = MyMesh()
+        
 
         m.textureCoordinates = uv_values
-
         self.extractTextures(node, m.textures)
+        
+        
 
         fbxMatrix = fbx.FbxAMatrix()
-        fbxMatrix = node.EvaluateGlobalTransform()
+        fbxMatrix = node.EvaluateGlobalTransform(self.time)
         for i in range (0, 4) :
             for j in range (0, 4) :
                 m.transform[i][j] = fbxMatrix.Get(i, j)             
 
+        print 'starting the skinning'
         cPoints = mesh.GetControlPoints();
         count = list(range(len(cPoints)))
         for i in count:
+            #local-space
             p = [cPoints[i][0], cPoints[i][1], cPoints[i][2], 1]  
-            """apply their global rotation"""
+            #to world-space coordinates
+            p = MyMaths.vectorDotMatrix(p, m.transform)
 
-            p = MyMaths.vectorDotMatrix(p, m.transform)                      
+
+            vertexToInterpolate = [] #one per bone skinned
+
+            
+            if(len(m.bones) != 0) :
+                boneCount = len(m.vertexBoneBindings[i])
+                for j in range(0,boneCount) :
+                    boneIndex = m.vertexBoneBindings[i][j]
+                    #if weight is 0, discard
+                    weight = m.bones[boneIndex].vertexWeightsArray[i]                    
+                    if weight == 0 : continue
+
+                    #for Vertex -> get world coords in t=0, set vertex in bone-space, get vertex back to world-space with the bone's transform in t=x                    
+                    boneNode = self.GetNode(self.root, m.bones[boneIndex].name)
+
+                    vertex = p
+
+
+                    boneInvTransform0 = m.bones[boneIndex].inverseBindPose
+                    myboneInvTransform0 = [[ 1, 0, 0, 0],[ 0, 1, 0, 0],[ 0, 0, 1, 0],[ 0, 0, 0, 0]]                    
+                    for y in range (0, 4) :
+                        for z in range (0, 4) :
+                            myboneInvTransform0[y][z] = boneInvTransform0.Get(y, z)
+
+                    pInBoneCoords0 = MyMaths.vectorDotMatrix(vertex, myboneInvTransform0)
+                    
+
+                    boneTransformT = self.animationEvaluator.GetNodeGlobalTransform(boneNode, self.time) #frame x
+                    myboneTransformT = [[ 1, 0, 0, 0],[ 0, 1, 0, 0],[ 0, 0, 1, 0],[ 0, 0, 0, 0]]
+                    for y in range (0, 4) :
+                        for z in range (0, 4) :
+                            myboneTransformT[y][z] = boneTransformT.Get(y, z)
+
+                    vertex = MyMaths.vectorDotMatrix(pInBoneCoords0, myboneTransformT)
+
+                    #apply bone weight 
+                    vertex = [vertex[0]*weight, vertex[1]*weight, vertex[2]*weight, 1] 
+                    vertexToInterpolate.append(vertex)                    
+                    
+            for n in range(0, len(vertexToInterpolate)) :
+                p = [p[0] + vertexToInterpolate[n][0],  p[1] + vertexToInterpolate[n][1], p[2] + vertexToInterpolate[n][2], 1]
+                              
             m.controlPoints.append(p)
+
+
             #mesh.text
             #m.textureCoordinates.append(mesh.GetAllChannelUV
+
+        print 'skinning finished'
 
         polygonCount = mesh.GetPolygonCount()
         count = list(range(polygonCount))
@@ -192,6 +347,22 @@ class Scene () :
         self.meshes.append(m)        
                                        
         return    
+
+
+    def GetNode (self, node, name) :
+
+        if  node.GetName() == name :
+            return node
+
+        childNumber = node.GetChildCount()
+        count = list(range(childNumber))
+        
+        for i in count:
+            n = self.GetNode(node.GetChild(i), name)            
+            if n != False :
+                return n   
+                           
+        return False
     
     
     def calculateWorldBoundaries (self) :
@@ -248,6 +419,10 @@ class MyMesh() :
     vertexIndicesArray = []
     textures = [] #paths to textures
 
+    vertexBoneBindings = []
+
+    bones = []
+
     def __init__(self):
         self.transform = [[ 1, 0, 0, 0],
                         [ 0, 1, 0, 0],
@@ -257,6 +432,8 @@ class MyMesh() :
         self.vertexIndicesArray = []
         self.textures = []
         self.textureCoordinates = []
+        self.bones = []
+        self.vertexBoneBindings = []
 
 class MyPolygon() :
 
@@ -265,7 +442,21 @@ class MyPolygon() :
     depth = 0
 
     def __init__(self):
-        mesh = 0        
-        vertexIndicesArray = []
-        depth = 0
+        self.mesh = 0        
+        self.vertexIndicesArray = []
+        self.depth = 0
+
+class MyBone() :
+
+    name = {}        
+    vertexWeightsArray = []    
+
+    bindPoseMAtrix = {}
+    inverseBindPose = {}
+
+    def __init__(self):
+        self.name = {}        
+        self.vertexWeightsArray = []
+        self.bindPoseMAtrix = {}
+        self.inverseBindPose = {}
 

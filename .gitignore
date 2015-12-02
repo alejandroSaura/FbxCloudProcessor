@@ -6,3 +6,4 @@ FbxCloudProcessor/Assets/
 *.png
 *.pdf
 FbxCloudProcessor/testPattern.html
+*.pyc
