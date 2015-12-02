@@ -292,15 +292,13 @@ class Scene () :
                     t0.SetFrame(0)
 
                     boneTransform0 = self.animationEvaluator.GetNodeGlobalTransform(boneNode, t0)
-                    #boneInvTransform0 = m.bones[boneIndex].inverseBindPose
+                    boneInvTransform0 = m.bones[boneIndex].inverseBindPose
                     myboneTransform0 = [[ 1, 0, 0, 0],[ 0, 1, 0, 0],[ 0, 0, 1, 0],[ 0, 0, 0, 0]]                    
                     for y in range (0, 4) :
                         for z in range (0, 4) :
                             myboneTransform0[y][z] = boneTransform0.Get(y, z)
 
-                    
-                    
-
+                    myboneInvTransform0 = MyMaths.transposeMatrix(myboneTransform0)
                     pInBoneCoords0 = MyMaths.vectorDotMatrix(vertex, myboneInvTransform0)
                     
 
