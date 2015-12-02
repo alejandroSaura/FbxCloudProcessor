@@ -224,7 +224,7 @@ class Scene () :
         
 
         #this will transform the UVs from byPolygon to byControlPoint
-        mesh.SplitPoints()
+        #mesh.SplitPoints()
 
         m = MyMesh()
         (m.bones, m.vertexBoneBindings) = self.extractSkinWeights(mesh)
@@ -234,7 +234,7 @@ class Scene () :
             print "Error: No UV coordinates found for the mesh"
             return 
 
-        if( mesh_uvs.GetMappingMode() != 1 ):
+        if( mesh_uvs.GetMappingMode() != 2 ):
             print "Error: UV mapping mode not supported, please use EMappingMode.eByPolygonVertex"
             return 
 
@@ -324,25 +324,38 @@ class Scene () :
 
         polygonCount = mesh.GetPolygonCount()
         count = list(range(polygonCount))
+
+        vertex_id = 0
+
         for i in count:       
             """Get indices for the current triangle"""   
             _indices = []   
-            for j in range(0, 3): 
-                _indices.append(mesh.GetPolygonVertex(i, j))
+            poly_uvs = []
 
             """Check if the polygon is facing the camera, discard it if not""" 
             _normals = []
+
             for j in range(0, 3): 
+
+                _indices.append(mesh.GetPolygonVertex(i, j))
+
+
+                uv_texture_index = mesh_uvs.GetIndexArray().GetAt(vertex_id)
+                poly_uvs.append( uv_texture_index )
+
                 normal = fbx.FbxVector4()
                 mesh.GetPolygonVertexNormal(i, j, normal) 
                 """ rotate the normals too for culling purposes """ 
                 normal = MyMaths.vectorDotMatrix(normal, m.transform)                  
                 _normals.append([normal[0], normal[1], normal[2], normal[3]])
 
+                vertex_id += 1
+
             """Here we have the normals of the 3 vertices. Interpolate and compare with the camera z vector"""
             interpolatedNormal = MyMaths.interpolate3Vectors(_normals[0], _normals[1], _normals[2])
             if (MyMaths.vector4ScalarProduct(interpolatedNormal, self.cameraToWorld[2]) > 0) :
                 m.vertexIndicesArray.append(_indices)
+                m.uvCoordsIndexArray.append(poly_uvs)
 
         self.meshes.append(m)        
                                        
@@ -416,6 +429,7 @@ class MyMesh() :
                     [ 0, 0, 0, 0]]
     controlPoints = []
     textureCoordinates = [] #uv coordinates
+    uvCoordsIndexArray = []
     vertexIndicesArray = []
     textures = [] #paths to textures
 
@@ -432,6 +446,7 @@ class MyMesh() :
         self.vertexIndicesArray = []
         self.textures = []
         self.textureCoordinates = []
+        self.uvCoordsIndexArray = []
         self.bones = []
         self.vertexBoneBindings = []
 
