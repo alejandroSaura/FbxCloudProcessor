@@ -5,6 +5,19 @@ import MyScene
 from PIL import Image 
 import math
 
+import cProfile
+
+def do_cprofile(func):
+    def profiled_func(*args, **kwargs):
+        profile = cProfile.Profile()
+        try:
+            profile.enable()
+            result = func(*args, **kwargs)
+            profile.disable()
+            return result
+        finally:
+            profile.print_stats()
+    return profiled_func
 
 #This class receives a mesh with control points [on world space] and the camera transform 
 class Renderer:
@@ -269,6 +282,7 @@ class Renderer:
     #Returns a 4-value tuple with:
     #[0] = boolean stating wether the point is inside the triangle or not
     #[1, 2, 3] = barycentric coords of the point
+    @do_cprofile
     def is_point_in_tri(self, P, A, B, C):
 
         #Compute vectors        
