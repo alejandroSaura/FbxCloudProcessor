@@ -29,6 +29,7 @@ class Renderer:
 
     imageWidth = 0
     imageHeight = 0
+    aspectRatio = 0
 
     worldToCamera = []
     mesh = {}
@@ -50,6 +51,7 @@ class Renderer:
 
         self.imageWidth = width
         self.imageHeight = height
+        self.aspectRatio = 0
 
         self.worldToCamera = []
         self.mesh = {}
@@ -141,6 +143,8 @@ class Renderer:
         self.minProjY = minY
         self.minZ = minZ
 
+        self.aspectRatio = self.renderYRange/self.renderYRange
+
 
     def projectControlPoints (self) :
 
@@ -155,8 +159,15 @@ class Renderer:
 
             """normalize respect the image size and adapt to screen coordinates (Y axis inverted)"""
             self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0] - self.minProjX, self.mesh.controlPoints[i][1] - self.minProjY, self.mesh.controlPoints[i][2] - self.minZ]
-            self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0]/self.renderXRange*self.imageWidth, self.mesh.controlPoints[i][1]/self.renderYRange*self.imageHeight, (self.mesh.controlPoints[i][2])/self.ZRange]
-            
+            #self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0]/self.renderXRange*self.imageWidth, self.mesh.controlPoints[i][1]/self.renderYRange*self.imageHeight, (self.mesh.controlPoints[i][2])/self.ZRange]
+
+            if(self.aspectRatio < 1) :
+                self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0]/self.renderXRange*self.imageWidth, self.mesh.controlPoints[i][1]/self.renderXRange*self.imageWidth, (self.mesh.controlPoints[i][2])/self.ZRange]
+            if(self.aspectRatio >= 1) :
+                self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0]/self.renderYRange*self.imageHeight, self.mesh.controlPoints[i][1]/self.renderYRange*self.imageHeight, (self.mesh.controlPoints[i][2])/self.ZRange]
+                           
+
+
         return         
 
     
