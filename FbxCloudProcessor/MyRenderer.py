@@ -181,7 +181,7 @@ class Renderer:
         """dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(255,255,255)'))"""          
         
         
-        texture = Image.open(self.mesh.textures[0])
+        texture = Image.open(".\\Assets\\" + self.mesh.textures[0].encode("ascii"))
                 
         for i in range(len(self.sortedPolygons)):   
             
