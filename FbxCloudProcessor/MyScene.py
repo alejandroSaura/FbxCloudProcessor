@@ -116,6 +116,8 @@ class Scene () :
 
         mesh = node.GetMesh()
 
+        #this will transform the UVs from byPolygon to byControlPoint
+        mesh.SplitPoints()
 
         mesh_uvs = mesh.GetLayer( 0 ).GetUVs()
 
@@ -123,7 +125,7 @@ class Scene () :
             print "Error: No UV coordinates found for the mesh"
             return 
 
-        if( mesh_uvs.GetMappingMode() != 2 ):
+        if( mesh_uvs.GetMappingMode() != 1 ):
             print "Error: UV mapping mode not supported, please use EMappingMode.eByPolygonVertex"
             return 
 
@@ -135,8 +137,8 @@ class Scene () :
         uv_values = []
         uv_indices = []
 
-        for l in range( uvs_count ):
-            uv = uvs_array.GetAt( l )
+        for k in range( uvs_count ):
+            uv = uvs_array.GetAt( k )
             uv = [ uv[ 0 ], uv[ 1 ] ]
             uv_values.append( uv )
 
@@ -159,8 +161,6 @@ class Scene () :
         for i in count:
             p = [cPoints[i][0], cPoints[i][1], cPoints[i][2], 1]  
             """apply their global rotation"""
-
-            #m.transform is not prepared to use, rightHanded system
 
             p = MyMaths.vectorDotMatrix(p, m.transform)                      
             m.controlPoints.append(p)
