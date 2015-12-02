@@ -180,7 +180,7 @@ class Renderer:
         """background"""
         """dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(255,255,255)'))"""          
         
-        #TO-DO: replace this with the real texture
+        
         texture = Image.open(self.mesh.textures[0])
                 
         for i in range(len(self.sortedPolygons)):   
@@ -284,7 +284,7 @@ class Renderer:
     #Returns a 4-value tuple with:
     #[0] = boolean stating wether the point is inside the triangle or not
     #[1, 2, 3] = barycentric coords of the point
-    @do_cprofile
+    #@do_cprofile
     def is_point_in_tri(self, P, A, B, C):
 
         #Compute vectors        

@@ -59,7 +59,7 @@ imageHeight = 500
 renderer = MyRenderer.Renderer(imageWidth, imageHeight)
 
 scene = MyScene.Scene()        
-scene.InitializeScene("Assets/TestMesh.FBX", renderer)  
+scene.InitializeScene("Assets/Maskboy.FBX", renderer)  
 #print "Starting render..."
 scene.Render()
 #print "Render finished..."

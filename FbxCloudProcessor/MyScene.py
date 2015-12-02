@@ -189,7 +189,7 @@ class Scene () :
                 for k in range(0, indexCount) :
                     #pair = [indices[k], weights[k]]
                     bone.vertexWeightsArray[indices[k]] = weights[k]                    
-                    if(weights[k] != 0) : vertextBoneBindings[indices[k]].append(i)
+                    if(weights[k] > 0.001) : vertextBoneBindings[indices[k]].append(i)
                 bones.append(bone)
             
         return (bones, vertextBoneBindings)
@@ -208,7 +208,7 @@ class Scene () :
             for textureIndex in range( 0, property.GetSrcObjectCount( fbx.FbxFileTexture.ClassId ) ):
 
                 texture = property.GetSrcObject( fbx.FbxFileTexture.ClassId, textureIndex )
-                textureList.append(texture.GetRelativeFileName())
+                textureList.append(texture.GetFileName())
                 #print texture.GetFileName()
 
 
