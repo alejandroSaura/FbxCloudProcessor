@@ -85,6 +85,7 @@ class Scene () :
         for i in count: 
             print ("Rendering mesh " + str(i))
             self.renderer.Render(self.meshes[i])
+        #self.renderer.Render(self.meshes[3])
 
         print "Saving final images"
         self.renderer.SaveImage()
@@ -162,15 +163,25 @@ class Scene () :
 
                 # matrices for bind and inverse bind
                 kLinkMatrix = fbx.FbxAMatrix()
+                #transform of the cluster at binding time
                 cluster.GetTransformLinkMatrix(kLinkMatrix)
 
+                # transform of the cluster at time T
+                kLinkMatrixT = fbx.FbxAMatrix()
+                kLinkMatrixT = cluster.GetLink().EvaluateGlobalTransform(self.time);
+                # inverse of the transform of the cluster at time T
+                kInvLinkMatrixT = fbx.FbxAMatrix()
+                kInvLinkMatrixT = kLinkMatrixT.Inverse()
+
                 kTM = fbx.FbxAMatrix()
+                #transform of the mesh at binding time
                 cluster.GetTransformMatrix(kTM);
 
                 kInvLinkMatrix = fbx.FbxAMatrix()
                 kInvLinkMatrix = kLinkMatrix.Inverse()
 
                 kM = fbx.FbxAMatrix()
+                #skinning matrix
                 kM = kInvLinkMatrix * kTM
                 
 
@@ -183,6 +194,10 @@ class Scene () :
 
                 bone.bindPoseMAtrix = kLinkMatrix
                 bone.inverseBindPose = kInvLinkMatrix
+
+                bone.boneMatrixT = kLinkMatrixT
+                bone.inverseBoneMatrixT = kInvLinkMatrixT
+
                 bone.kM = kM
 
                 bone.vertexWeightsArray = [0] * mesh.GetControlPointsCount()                         
@@ -303,31 +318,34 @@ class Scene () :
                     pInBoneCoords0 = MyMaths.vectorDotMatrix(vertex, myboneInvTransform0)
                     
 
-                    boneTransformT = self.animationEvaluator.GetNodeGlobalTransform(boneNode, self.time) #frame x
+                    """boneTransformT = self.animationEvaluator.GetNodeGlobalTransform(boneNode, self.time) #frame x
                     myboneTransformT = [[ 1, 0, 0, 0],[ 0, 1, 0, 0],[ 0, 0, 1, 0],[ 0, 0, 0, 0]]
                     for y in range (0, 4) :
                         for z in range (0, 4) :
                             myboneTransformT[y][z] = boneTransformT.Get(y, z)
 
-                    vertex = MyMaths.vectorDotMatrix(pInBoneCoords0, myboneTransformT)
+                    vertex = MyMaths.vectorDotMatrix(pInBoneCoords0, myboneTransformT)"""
 
 
 
-                    """boneTransform0 = m.bones[boneIndex].inverseBindPose
+                    boneTransform0 = m.bones[boneIndex].boneMatrixT
                     myboneTransform0 = [[ 1, 0, 0, 0],[ 0, 1, 0, 0],[ 0, 0, 1, 0],[ 0, 0, 0, 0]]                    
                     for y in range (0, 4) :
                         for z in range (0, 4) :
                             myboneTransform0[y][z] = boneTransform0.Get(y, z)
 
                     #myboneInvTransform0 = MyMaths.transposeMatrix(myboneTransform0)
-                    vertex = MyMaths.vectorDotMatrix(pInBoneCoords0, myboneTransform0)"""
+                    vertex = MyMaths.vectorDotMatrix(pInBoneCoords0, myboneTransform0)
 
                     #apply bone weight 
                     vertex = [vertex[0]*weight, vertex[1]*weight, vertex[2]*weight, 1] 
                     vertexToInterpolate.append(vertex)                    
-                    
-            for n in range(0, len(vertexToInterpolate)) :
-                p = [p[0] + vertexToInterpolate[n][0],  p[1] + vertexToInterpolate[n][1], p[2] + vertexToInterpolate[n][2], 1]
+             
+            if len(vertexToInterpolate) > 0 :
+                p = [0, 0, 0]       
+                for n in range(0, len(vertexToInterpolate)) :
+                
+                    p = [p[0] + vertexToInterpolate[n][0],  p[1] + vertexToInterpolate[n][1], p[2] + vertexToInterpolate[n][2], 1]
                               
             m.controlPoints.append(p)
 
@@ -484,10 +502,14 @@ class MyBone() :
     inverseBindPose = {}
     kM = {}
 
+    boneMatrixT = {}
+    inverseBoneMatrixT = {}
+
     def __init__(self):
         self.name = {}        
         self.vertexWeightsArray = []
         self.bindPoseMAtrix = {}
         self.inverseBindPose = {}
         self.kM = {}
-
+        self.boneMatrixT = {}
+        self.inverseBoneMatrixT = {}

@@ -18,8 +18,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
      
     print "request received"
 
-    imageWidth = 500
-    imageHeight = 500   
+    imageWidth = 256
+    imageHeight = 256   
 
     path = s.path    
     filepath = path[1:]   
@@ -52,14 +52,14 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 #httpd.serve_forever()
 
 
-imageWidth = 1920   
-imageHeight = 1080
+imageWidth = 256   
+imageHeight = 256
  
 
 renderer = MyRenderer.Renderer(imageWidth, imageHeight)
 
 scene = MyScene.Scene()        
-scene.InitializeScene("Assets/Maskboy.FBX", renderer)  
+scene.InitializeScene("Assets/MAskboy.FBX", renderer)  
 #print "Starting render..."
 scene.Render()
 #print "Render finished..."

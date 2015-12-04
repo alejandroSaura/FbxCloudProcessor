@@ -11,6 +11,9 @@ def transposeMatrix (matrix) :
 
 def vectorDotMatrix (vector, matrix) :
 
+    if len(vector) < 4 :
+        print 'vector length error'
+
     result = [0] * 4
     for i in range(4) :
         result[i] = vector[0] * matrix[0][i] + vector[1] * matrix[1][i] + vector[2] * matrix[2][i] + vector[3] * matrix[3][i]
