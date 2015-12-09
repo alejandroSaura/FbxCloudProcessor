@@ -1,7 +1,7 @@
 ﻿import fbx
 import MyMaths
 import MyRenderer
-
+import sys
 #import svgwrite
 from PIL import Image 
 
@@ -50,7 +50,7 @@ class Scene () :
         status = importer.Initialize(fileName)
         if status == False :
             print 'fbx initialization failed'
-            #print 'Error: %s' % importer.GetLastErrorString()
+            print 'Error: %s' % importer.GetLastErrorString()
             sys.exit()
 
         self.scene = fbx.FbxScene.Create( manager, 'myScene')      
