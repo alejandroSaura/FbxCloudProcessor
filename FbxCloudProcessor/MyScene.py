@@ -2,7 +2,7 @@
 import MyMaths
 import MyRenderer
 
-import svgwrite
+#import svgwrite
 from PIL import Image 
 
 class Scene () :

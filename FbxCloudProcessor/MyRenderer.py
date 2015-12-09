@@ -1,5 +1,5 @@
 ﻿from __future__ import division
-import svgwrite
+#import svgwrite
 import MyMaths
 import MyScene
 from PIL import Image 

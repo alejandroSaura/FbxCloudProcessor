@@ -14,52 +14,38 @@ import MyRenderer
  
 class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
-  def do_GET(s):
-     
-    print "request received"
-
-    imageWidth = 256
-    imageHeight = 256   
-
-    path = s.path    
-    filepath = path[1:]   
-    
-    """req = urllib2.Request('https://www.dropbox.com/s/48fpvxdvk4l4qv2/cubeMan.fbx?dl=1')
-    req.add_header('Content-Type', 'application/octet-stream')
-    r = urllib2.urlopen(req)
-      
-    object = r.read()    
-
-    newFile = open ("object.fbx", 'wb')
-    newFile.write(object);
-    newFile.close()"""  
-
-    renderer = MyRenderer.Renderer(imageWidth, imageHeight)
-
-    scene = MyScene.Scene()        
-    scene.InitializeScene("TestMesh02.fbx", renderer)  
-    scene.Render()
-
-    s.send_response(200)
-    s.send_header("Content-type", "text/html")
-    s.end_headers()
-    s.wfile.write("<html><head><title>FBX online counter</title></head>")
-    s.wfile.write("<body><p>Put the fbx file path in the URL</p>")
-    """s.wfile.write("<p>Vertex count: %s</p>" % (vertexCount))"""    
-    s.wfile.write("</body></html>")
-
-#httpd = BaseHTTPServer.HTTPServer(("localhost", 8000), MyHandler)
-#httpd.serve_forever()
-
-
-imageWidth = 256   
-imageHeight = 256
+    def do_POST(s):
+        s.send_response(200)
+        imageWidth = 256   
+        imageHeight = 256
  
 
-renderer = MyRenderer.Renderer(imageWidth, imageHeight)
+        renderer = MyRenderer.Renderer(imageWidth, imageHeight)
 
-scene = MyScene.Scene()        
-scene.InitializeScene("Assets/MAskboy.FBX", renderer)  
-#print "Starting render..."
-scene.Render()
-#print "Render finished..."
+        scene = MyScene.Scene()        
+        scene.InitializeScene("Assets/MAskboy.FBX", renderer)  
+        print "Starting render..."
+        scene.Render()
+        print "Render finished..."
+        s.send_header("Content-type", "text/html")
+        s.end_headers()
+        s.wfile.write("<html><head><title>My first webhook!</title></head>")
+        s.wfile.write("<p>It should finish rendering</p>")
+        s.wfile.write("</body></html>")
+    
+
+    httpd = BaseHTTPServer.HTTPServer(("0.0.0.0", 8000), MyHandler)
+    httpd.serve_forever()
+
+
+    #imageWidth = 256   
+    #imageHeight = 256
+ 
+
+    #renderer = MyRenderer.Renderer(imageWidth, imageHeight)
+
+    #scene = MyScene.Scene()        
+    #scene.InitializeScene("Assets/MAskboy.FBX", renderer)  
+    #print "Starting render..."
+    #scene.Render()
+    #print "Render finished..."
