@@ -23,7 +23,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         renderer = MyRenderer.Renderer(imageWidth, imageHeight)
 
         scene = MyScene.Scene()        
-        scene.InitializeScene("Assets/MAskboy.FBX", renderer)  
+        scene.InitializeScene("Assets/Maskboy.FBX", renderer)  
         print "Starting render..."
         scene.Render()
         print "Render finished..."
