@@ -1,20 +1,21 @@
-from subprocess import Popen
-import os
+import MyScene
+import MyRenderer
+import sys
 
-numberOfFrames = 10;
-animationLength = 100;
+arguments = sys.argv
+frameNumber = arguments[1]
 
-pArray = []
+imageWidth = 256   
+imageHeight = 256
+ 
 
-#launch one process per frame to render
-count = list(range(numberOfFrames))
-for i in count :
-    frame = int((animationLength/numberOfFrames)*i)
-    pArray.append(Popen(["python", "FbxCloudProcessor.py", str(frame)]))
+renderer = MyRenderer.Renderer(imageWidth, imageHeight)
 
-#wait for all processes to finish
-for i in count :         
-        pArray[i].wait()
-
-print "all frames rendered"
+scene = MyScene.Scene()        
+scene.InitializeScene("Assets/MAskboy.FBX", renderer)  
+scene.setTime(int(frameNumber))
+scene.exploreScene(scene.root)
+print "Starting render of frame "+ frameNumber
+scene.Render("render"+frameNumber)
+print "End render of frame "+ frameNumber
 
