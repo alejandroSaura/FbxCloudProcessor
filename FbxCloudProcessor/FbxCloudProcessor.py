@@ -34,8 +34,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         s.wfile.write("</body></html>")
     
 
-    httpd = BaseHTTPServer.HTTPServer(("0.0.0.0", 8000), MyHandler)
-    httpd.serve_forever()
+httpd = BaseHTTPServer.HTTPServer(("0.0.0.0", 8000), MyHandler)
+httpd.serve_forever()
 
 
     #imageWidth = 256   
