@@ -1,0 +1,11 @@
+start cmd /c python FbxCloudProcessor.py 1
+start cmd /c python FbxCloudProcessor.py 10
+start cmd /c python FbxCloudProcessor.py 20
+start cmd /c python FbxCloudProcessor.py 30
+start cmd /c python FbxCloudProcessor.py 40
+start cmd /c python FbxCloudProcessor.py 50
+start cmd /c python FbxCloudProcessor.py 60
+start cmd /c python FbxCloudProcessor.py 70
+start cmd /c python FbxCloudProcessor.py 80
+start cmd /c python FbxCloudProcessor.py 90
+start cmd /c python FbxCloudProcessor.py 100

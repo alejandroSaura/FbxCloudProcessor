@@ -42,7 +42,7 @@ class Scene () :
     def InitializeScene (self, fileName, _renderer) :
 
         self.time = fbx.FbxTime()
-        self.time.SetFrame(50)
+        #self.time.SetFrame(50)
 
         self.renderer = _renderer
         manager = fbx.FbxManager.Create()
@@ -57,24 +57,27 @@ class Scene () :
 
         importer.Import(self.scene)
         importer.Destroy()
-                
-
-        #Import animation if it exists        
-        #We are insterested only in the first stack and first layer (import simple animations)
-        
-        animationStack = self.scene.GetCurrentAnimationStack()
-        self.animationLayer = animationStack.GetMember(fbx.FbxAnimLayer.ClassId, 0)
-
-        #Other approach, evaluator:
         
         self.animationEvaluator = self.scene.GetAnimationEvaluator()
 
         self.root = self.scene.GetRootNode() 
         self.InitializeCamera()
-        self.exploreScene(self.root) 
+        #self.exploreScene(self.root) 
+
+
+    def setTime(self, _time) :
+        self.time.SetFrame(_time)    
+
+    def clear(self) :
+        self.meshes = []
+        self.polygons = []
+        self.sortedPolygons = []
+
+        self.renderer.clear()
+
         
 
-    def Render (self) :
+    def Render (self, fileName) :
         print "Calculating world boundaries"
         boundaries = self.calculateWorldBoundaries()
         
@@ -84,7 +87,7 @@ class Scene () :
         count = list(range(len(self.meshes)))
         for i in count: 
             print ("Rendering mesh " + str(i))
-            self.renderer.Render(self.meshes[i])
+            self.renderer.Render(self.meshes[i], fileName)
         #self.renderer.Render(self.meshes[3])
 
         print "Saving final images"
@@ -104,27 +107,7 @@ class Scene () :
         self.worldToCamera = MyMaths.transposeMatrix(self.cameraToWorld) 
 
 
-    def exploreScene(self, node) :   
-
-        """animationCurve = node.LclTranslation.GetCurve(self.animationLayer)
-        if(animationCurve != None) :
-            print 'animation curve found'
-            curveEvaluation = animationCurve.Evaluate(self.time)"""
-
-        
-
-        """ Useless
-        #for other objects -> Set their local transform here for t=x
-        transform = self.animationEvaluator.GetNodeLocalTransform(node, self.time)
-        #translate
-        locTrans = transform.GetRow(3)
-        pos3 = fbx.FbxDouble3(locTrans[0], locTrans[1], locTrans[2])        
-        node.LclTranslation.Set(pos3)
-        #rotate
-        locRot = transform.GetR()
-        rot3 = fbx.FbxDouble3(locRot[0], locRot[1], locRot[2])
-        node.LclRotation.Set(rot3)
-        """
+    def exploreScene(self, node) :         
 
         mesh = node.GetMesh() 
         if(mesh != None and (mesh.IsTriangleMesh()) == False) :
@@ -209,8 +192,6 @@ class Scene () :
                 bones.append(bone)
             
         return (bones, vertextBoneBindings)
-	
-	    
 
 
     def extractTextures(self, node, textureList):
@@ -225,9 +206,7 @@ class Scene () :
 
                 texture = property.GetSrcObject( fbx.FbxFileTexture.ClassId, textureIndex )
                 textureList.append(texture.GetRelativeFileName())
-                #print texture.GetFileName()
-
-
+                #print texture.GetFileName()   
 
     def exploreMesh (self, node) :
         """
@@ -235,14 +214,14 @@ class Scene () :
             print 'test bone'
         """
 
-        mesh = node.GetMesh()          
-
-        
+        mesh = node.GetMesh()         
 
         #this will transform the UVs from byPolygon to byControlPoint
         #mesh.SplitPoints()
 
         m = MyMesh()
+        m.node = node;
+
         (m.bones, m.vertexBoneBindings) = self.extractSkinWeights(mesh)
 
         mesh_uvs = mesh.GetLayer( 0 ).GetUVs()
@@ -270,7 +249,6 @@ class Scene () :
 
         m.textureCoordinates = uv_values
         self.extractTextures(node, m.textures)
-        
         
 
         fbxMatrix = fbx.FbxAMatrix()
@@ -455,6 +433,8 @@ class Scene () :
     
 class MyMesh() :    
 
+    node = {}
+
     transform = [[ 1, 0, 0, 0],
                     [ 0, 1, 0, 0],
                     [ 0, 0, 1, 0],
@@ -470,6 +450,7 @@ class MyMesh() :
     bones = []
 
     def __init__(self):
+        self.node = {}
         self.transform = [[ 1, 0, 0, 0],
                         [ 0, 1, 0, 0],
                         [ 0, 0, 1, 0],

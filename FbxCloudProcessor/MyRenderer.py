@@ -25,6 +25,8 @@ class Renderer:
     image = {}
     zRender = {}
 
+    imageName = {}
+
     depthBuffer = []
 
     imageWidth = 0
@@ -53,6 +55,8 @@ class Renderer:
         self.imageHeight = height
         self.aspectRatio = 0
 
+        self.imageName = {}
+
         self.worldToCamera = []
         self.mesh = {}
         self.polygons = []
@@ -78,11 +82,18 @@ class Renderer:
         self.colorBuffer = [(0,0,0) for x in range(width * height)]
 
 
+    def clear (self) :
+        
+        self.depthBuffer = [[2 for x in range(self.imageHeight)] for y in range(self.imageWidth)]        
+        self.colorBuffer = [(0,0,0) for x in range(self.imageWidth * self.imageHeight)]
+
     #@do_cprofile
-    def Render(self, _mesh) :
+    def Render(self, _mesh, _imageName) :
 
         self.polygons = []
         self.sortedPolygons = []
+
+        self.imageName = _imageName
 
         self.mesh = _mesh
         print 'Projecting control points'
@@ -272,8 +283,8 @@ class Renderer:
 
         #Save the frame
         self.image.putdata(self.colorBuffer)
-        self.image.save("Assets/render.PNG")
-        self.zRender.save("Assets/renderZBuffer.PNG")
+        self.image.save("Temporal/"+self.imageName+".PNG")
+        #self.zRender.save("Temporal/"+self.imageName+"ZBuffer.PNG")
 
 
     def renderZBuffer(self) :        
