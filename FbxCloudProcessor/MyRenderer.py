@@ -3,6 +3,7 @@
 import MyMaths
 import MyScene
 from PIL import Image 
+from PIL import ImageFile 
 import math
 import os.path
 import cProfile
@@ -203,9 +204,18 @@ class Renderer:
         """background"""
         """dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(255,255,255)'))"""          
         
-        
-        texture = Image.open(os.path.join("Assets", self.mesh.textures[0].encode("ascii")))
-                
+        ImageFile.LOAD_TRUNCATED_IMAGES = True
+        texture = Image.open(os.path.join("Assets", self.mesh.textures[0].encode("ascii")), 'r')
+
+        #textureAccessed = False
+        #while(textureAccessed == False) :
+        #    try :
+        #        texture = Image.open(os.path.join("Assets", self.mesh.textures[0].encode("ascii")))
+        #        textureAccessed = True
+        #    except :
+        #        textureAccessed = False
+        #        pass
+
         for i in range(len(self.sortedPolygons)):   
             
             #Control points in screen space
