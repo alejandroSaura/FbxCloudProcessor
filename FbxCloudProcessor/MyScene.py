@@ -49,8 +49,8 @@ class Scene () :
         importer = fbx.FbxImporter.Create(manager, 'myImporter')        
         status = importer.Initialize(fileName)
         if status == False :
-            print 'fbx initialization failed'
-            print 'Error: %s' % importer.GetLastErrorString()
+            print 'Scene: fbx initialization failed'
+            print 'Scene: Error, %s' % importer.GetLastErrorString()
             sys.exit()
 
         self.scene = fbx.FbxScene.Create( manager, 'myScene')      
@@ -78,7 +78,7 @@ class Scene () :
         
 
     def Render (self, fileName) :
-        print "Calculating world boundaries"
+        #print "Calculating world boundaries"
         boundaries = self.calculateWorldBoundaries()
         
         self.renderer.SetCamera(self.worldToCamera)
@@ -86,11 +86,11 @@ class Scene () :
 
         count = list(range(len(self.meshes)))
         for i in count: 
-            print ("Rendering mesh " + str(i))
+            print "Frame "+ str(self.time.GetFrameCount())+", Scene: Rendering mesh " + str(i)+'\n'
             self.renderer.Render(self.meshes[i], fileName)
         #self.renderer.Render(self.meshes[3])
 
-        print "Saving final images"
+        #print "Saving final images"
         self.renderer.SaveImage()
         return
     
@@ -111,7 +111,7 @@ class Scene () :
 
         mesh = node.GetMesh() 
         if(mesh != None and (mesh.IsTriangleMesh()) == False) :
-            print "Found a mesh not triangulated"
+            print "Scene: Found a mesh not triangulated"
 
         if(mesh != None and mesh.IsTriangleMesh()) :
             self.exploreMesh(node)            
@@ -137,7 +137,7 @@ class Scene () :
 
         defType = deformer.GetDeformerType()
         if (defType == 1) : #0 - unkwown, 1 - skin
-            print 'skin modifier found'
+            #print 'skin modifier found'
             clusterCount = deformer.GetClusterCount()
             for i in range(0,clusterCount) :
                 cluster = deformer.GetCluster(i)
@@ -226,11 +226,11 @@ class Scene () :
 
         mesh_uvs = mesh.GetLayer( 0 ).GetUVs()
         if( not mesh_uvs ):
-            print "Error: No UV coordinates found for the mesh"
+            print "Scene: Error, No UV coordinates found for the mesh"
             return 
 
         if( mesh_uvs.GetMappingMode() != 2 ):
-            print "Error: UV mapping mode not supported, please use EMappingMode.eByPolygonVertex"
+            print "Scene: Error, UV mapping mode not supported, please use EMappingMode.eByPolygonVertex"
             return 
 
 
@@ -257,7 +257,7 @@ class Scene () :
             for j in range (0, 4) :
                 m.transform[i][j] = fbxMatrix.Get(i, j)             
 
-        print 'starting the skinning'
+        #print 'Scene: skinning mesh '+str(len(self.meshes))
         cPoints = mesh.GetControlPoints();
         count = list(range(len(cPoints)))
         for i in count:
@@ -331,7 +331,7 @@ class Scene () :
             #mesh.text
             #m.textureCoordinates.append(mesh.GetAllChannelUV
 
-        print 'skinning finished'
+        #print 'skinning finished'
 
         polygonCount = mesh.GetPolygonCount()
         count = list(range(polygonCount))

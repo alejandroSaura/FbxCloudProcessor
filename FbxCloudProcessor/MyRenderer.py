@@ -96,13 +96,13 @@ class Renderer:
         self.imageName = _imageName
 
         self.mesh = _mesh
-        print 'Projecting control points'
+        #print 'Projecting control points'
         self.projectControlPoints()
-        print 'Calculating polygons'
+        #print 'Calculating polygons'
         self.calculatePolygons()
-        print 'Sorting polygons'
+        #print 'Sorting polygons'
         self.sortPolygons()
-        print 'Drawing polygons'
+        #print 'Renderer: Drawing polygons'
         self.drawPolygons()
 
         #For debugging purposes

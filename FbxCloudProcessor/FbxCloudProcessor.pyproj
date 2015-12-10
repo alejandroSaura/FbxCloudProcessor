@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>29a196ef-230a-4452-a88d-32f28f03ab59</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>FbxCloudProcessor.py</StartupFile>
+    <StartupFile>Server.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,14 +22,14 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CloudManager.py">
+    <Compile Include="FBXProcessor.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="FbxCloudProcessor.py" />
+    <Compile Include="FrameProcessor.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Server.py" />
     <Compile Include="MyMaths.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MyRaster.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MyScene.py" />

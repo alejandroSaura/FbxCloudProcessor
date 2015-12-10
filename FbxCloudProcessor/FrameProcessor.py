@@ -12,10 +12,10 @@ imageHeight = 256
 renderer = MyRenderer.Renderer(imageWidth, imageHeight)
 
 scene = MyScene.Scene()        
-scene.InitializeScene("Assets/MAskboy.FBX", renderer)  
+scene.InitializeScene("Assets/Maskboy.FBX", renderer)  
 scene.setTime(int(frameNumber))
 scene.exploreScene(scene.root)
-print "Starting render of frame "+ frameNumber
+print "FrameProcessor: Starting render of frame "+ frameNumber +'\n'
 scene.Render("render"+frameNumber)
-print "End render of frame "+ frameNumber
+print "FrameProcessor: frame " + frameNumber + " rendered"+'\n'
 
