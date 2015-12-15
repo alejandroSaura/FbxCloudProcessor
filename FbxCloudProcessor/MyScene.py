@@ -61,7 +61,7 @@ class Scene () :
         self.animationEvaluator = self.scene.GetAnimationEvaluator()
 
         self.root = self.scene.GetRootNode() 
-        self.InitializeCamera()
+        # self.InitializeCamera()
         #self.exploreScene(self.root) 
 
 
@@ -95,7 +95,7 @@ class Scene () :
         return
     
 
-    def InitializeCamera (self) :
+    def InitializeCamera (self, angleY) :
 
         self.cameraToWorld = [[ 1, 0, 0, 0],
                          [ 0, 1, 0, 0],
@@ -103,7 +103,7 @@ class Scene () :
                          [ 0, 0, 0, 0]]    
         """rotate the camera to have an isometric point of view"""
         """careful: right handed euler rotation"""
-        self.cameraToWorld = MyMaths.rotateMatrix(self.cameraToWorld, 45, -45, 0)        
+        self.cameraToWorld = MyMaths.rotateMatrix(self.cameraToWorld, -angleY, -45, 0)        
         self.worldToCamera = MyMaths.transposeMatrix(self.cameraToWorld) 
 
 

@@ -1,4 +1,4 @@
-from subprocess import Popen
+﻿from subprocess import Popen
 from subprocess import call
 import os  
 
@@ -6,26 +6,31 @@ from PIL import Image
 
 def CreateAnimationSheet() :
 
-    imageWidth = 256   
-    imageHeight = 256
+    imageWidth = 128   
+    imageHeight = 128
 
-    numberOfFrames = 100;
+    numberOfFrames = 6;
     animationLength = 100;
 
-    # array of process
-    pArray = []
+    # we'll render all frames for each camera angle
+    cameraAngleList = [0, 45, 90, 135, 180, -135, -90, -45]
 
-    # launch one process per frame to render
-    count = list(range(numberOfFrames))
-    for i in count :
-        frame = int((animationLength/numberOfFrames)*i)
-        pArray.append(Popen(["python", "FrameProcessor.py", str(frame)]))
+    for k in cameraAngleList :
 
-    # wait for all processes to finish
-    for i in count :         
-            pArray[i].wait()
+        # array of process
+        pArray = []
 
-    print "FBXProcessor: All frames rendered"
+        # launch one process per frame to render
+        count = list(range(numberOfFrames))
+        for i in count :
+            frame = int((animationLength/numberOfFrames)*i)
+            pArray.append(Popen(["python", "FrameProcessor.py", str(frame), str(k), str(imageWidth), str(imageHeight)]))
+
+        # wait for all processes to finish
+        for i in count :         
+                pArray[i].wait()
+
+        print "FBXProcessor: All frames rendered for camera angle: " + str(k)
 
 
 
