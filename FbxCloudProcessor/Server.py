@@ -53,4 +53,4 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 # server start :
 #httpd = BaseHTTPServer.HTTPServer(("0.0.0.0", 8000), MyHandler)
 #httpd.serve_forever()
-CreateAnimationSheet()
+CreateAnimationSheet("Maskboy")
