@@ -1,8 +1,10 @@
 ﻿from subprocess import Popen
 from subprocess import call
 import os  
+import threading
 
 from PIL import Image 
+import MyScene
 
 def CreateAnimationSheet(fileName) :
 
@@ -10,10 +12,60 @@ def CreateAnimationSheet(fileName) :
     imageHeight = 256
 
     numberOfFrames = 8;
-    animationLength = 20;
+    animationLength = 100;
 
     # we'll render all frames for each camera angle
     cameraAngleList = [0, 45, 90, 135, 180, -135, -90, -45]
+
+    def compareBoundaries(bound1, bound2) :
+
+        result = []
+
+        maxX = max(bound1[0][0], bound2[0][0])
+        minX = min(bound1[7][0], bound2[7][0])
+        maxY = max(bound1[0][1], bound2[0][1])
+        minY = min(bound1[7][1], bound2[7][1])
+        maxZ = max(bound1[0][2], bound2[0][2])
+        minZ = min(bound1[7][2], bound2[7][2])
+
+        result.append([maxX, maxY, maxZ, 1])
+        result.append([maxX, minY, maxZ, 1]) 
+        result.append([minX, maxY, maxZ, 1])
+        result.append([minX, minY, maxZ, 1])
+
+        result.append([maxX, maxY, minZ, 1])
+        result.append([maxX, minY, minZ, 1])
+        result.append([minX, maxY, minZ, 1])
+        result.append([minX, minY, minZ, 1])   
+
+        return result       
+
+    # calculate max world boundaries
+    print "Calculating scene boundaries..."
+
+    # maxX, maxY, maxZ, minX, minY, minZ
+    globalBoundaries = None
+    count = list(range(numberOfFrames))     
+    for i in count :                
+        frame = int((animationLength/numberOfFrames)*i)
+        print "Calculating boundaries: frame " + str(frame)
+        scene = MyScene.Scene()        
+        scene.InitializeScene("Assets/"+fileName+".FBX", None)
+        scene.InitializeCamera(0);
+        scene.setTime(int(frame))
+        scene.exploreScene(scene.root) 
+        boundaries = scene.calculateWorldBoundaries()
+        if globalBoundaries != None :
+            globalBoundaries = compareBoundaries(boundaries, globalBoundaries)
+        else :
+            globalBoundaries = boundaries
+
+    maxX = globalBoundaries[0][0]
+    minX = globalBoundaries[7][0]
+    maxY = globalBoundaries[0][1]
+    minY = globalBoundaries[7][1]
+    maxZ = globalBoundaries[0][2]
+    minZ = globalBoundaries[7][2]
 
     for k in cameraAngleList :
 
@@ -24,7 +76,7 @@ def CreateAnimationSheet(fileName) :
         count = list(range(numberOfFrames))
         for i in count :
             frame = int((animationLength/numberOfFrames)*i)
-            pArray.append(Popen(["python", "FrameProcessor.py", str(frame), str(k), str(imageWidth), str(imageHeight), fileName]))
+            pArray.append(Popen(["python", "FrameProcessor.py", str(frame), str(k), str(imageWidth), str(imageHeight), fileName, str(maxX), str(maxY), str(maxZ), str(minX), str(minY), str(minZ)]))
 
         # wait for all processes to finish
         for i in count :         

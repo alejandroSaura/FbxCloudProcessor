@@ -16,7 +16,7 @@ class Scene () :
 
     meshes = []    
     root = {}
-    
+    boundaries = []
 
     cameraToWorld = []
     worldToCamera =  []
@@ -32,6 +32,7 @@ class Scene () :
         self.polygons = []
         self.sortedPolygons = []
         self.root = {}
+        self.boundaries = []
         
         self.cameraToWorld = []
         self.worldToCamera =  []
@@ -75,11 +76,14 @@ class Scene () :
 
         self.renderer.clear()
 
-        
+    def setBoundaries(self, newBoundaries) :
+        self.boundaries = newBoundaries        
 
     def Render (self, fileName) :
         #print "Calculating world boundaries"
-        boundaries = self.calculateWorldBoundaries()
+        #boundaries = self.calculateWorldBoundaries()
+
+        boundaries = self.boundaries
         
         self.renderer.SetCamera(self.worldToCamera)
         self.renderer.SetWorldBoundaries(boundaries)
