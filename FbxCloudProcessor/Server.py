@@ -60,8 +60,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
             
 # server start :
-#httpd = BaseHTTPServer.HTTPServer(("0.0.0.0", 8000), MyHandler)
-#httpd.serve_forever()
+httpd = BaseHTTPServer.HTTPServer(("52.11.211.63", 8000), MyHandler)
+httpd.serve_forever()
 
 textures = GetTextures("Maskboy")
 CreateAnimationSheet("Maskboy")
