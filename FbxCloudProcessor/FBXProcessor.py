@@ -6,6 +6,24 @@ import threading
 from PIL import Image 
 import MyScene
 
+def GetTextures(fileName) :
+    scene = MyScene.Scene()        
+    scene.InitializeScene("Assets/"+fileName+".FBX", None)
+    scene.InitializeCamera(0);
+    scene.setTime(0)
+    textures = scene.extractAllTextures(scene.root) 
+    # those could be duplicated, process this list:
+    unifiedTextures = []
+    for t in textures:
+        found = False
+        for ut in unifiedTextures:
+            if ( t == ut) : 
+                found = True
+                break
+        if not found : unifiedTextures.append(t)
+
+    return unifiedTextures
+
 def CreateAnimationSheet(fileName) :
 
     imageWidth = 256   
@@ -65,7 +83,7 @@ def CreateAnimationSheet(fileName) :
     scene.InitializeCamera(0);
     scene.setTime(0)
     scene.exploreScene(scene.root) 
-    boundaries = scene.calculateWorldBoundaries() #Projected
+    boundaries = scene.calculateProjectedBoundaries() #Projected
     globalBoundaries = boundaries
 
     maxX = globalBoundaries[0][0] - globalBoundaries[0][0]*0.2    

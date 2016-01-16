@@ -197,6 +197,39 @@ class Scene () :
             
         return (bones, vertextBoneBindings)
 
+    def extractAllTextures (self, node) :
+
+        mesh = node.GetMesh() 
+        if(mesh != None and (mesh.IsTriangleMesh()) == False) :
+            print "Scene: Found a mesh not triangulated"
+        m = MyMesh()
+        m.node = node;
+
+        myNodeTexturelist = []
+        childrenNodesTextureList = []
+        
+        for materialIndex in range( 0, node.GetMaterialCount() ):
+            #materialCount = node.GetMaterialCount()
+            material = node.GetMaterial( materialIndex )
+
+            for propertyIndex in range( 0, fbx.FbxLayerElement.sTypeTextureCount() ):
+                property = material.FindProperty( fbx.FbxLayerElement.sTextureChannelNames( propertyIndex ) )
+
+                for textureIndex in range( 0, property.GetSrcObjectCount( fbx.FbxFileTexture.ClassId ) ):
+                    texture = property.GetSrcObject( fbx.FbxFileTexture.ClassId, textureIndex )
+                    myNodeTexturelist.append(texture.GetRelativeFileName())
+
+        childNumber = node.GetChildCount()
+        count = list(range(childNumber))
+        for i in count:
+            childTextures = self.extractAllTextures(node.GetChild(i))
+            childrenNodesTextureList += childTextures   
+                           
+        return childrenNodesTextureList + myNodeTexturelist
+
+        
+        
+
 
     def extractTextures(self, node, textureList):
         for materialIndex in range( 0, node.GetMaterialCount() ):
@@ -392,7 +425,7 @@ class Scene () :
         return False
     
     
-    def calculateWorldBoundaries (self) :
+    def calculateProjectedBoundaries (self) :
 
         maxX = 0
         minX = 0

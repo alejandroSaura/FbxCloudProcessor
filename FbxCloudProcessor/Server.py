@@ -10,6 +10,7 @@ from subprocess import Popen
 import os  
 
 from FBXProcessor import CreateAnimationSheet
+from FBXProcessor import GetTextures
  
 class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
@@ -47,10 +48,20 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         print "Server: FBX file fetched"
 
         # here we have the (TO-DO: list-of) FBX to process
-        CreateAnimationSheet()
+        # now fetch the textures needed for each fbx and create the animation sheet.
+        fileName = fileToProcess[:-3]
+        print 'Analysing needed textures'
+        textures = GetTextures(fileName)
+
+        print 'Fetching needed textures'
+
+        print 'Start creating the animation sheet'
+        CreateAnimationSheet(fileName)
     
             
 # server start :
 #httpd = BaseHTTPServer.HTTPServer(("0.0.0.0", 8000), MyHandler)
 #httpd.serve_forever()
+
+textures = GetTextures("Maskboy")
 CreateAnimationSheet("Maskboy")
