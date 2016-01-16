@@ -227,9 +227,6 @@ class Scene () :
                            
         return childrenNodesTextureList + myNodeTexturelist
 
-        
-        
-
 
     def extractTextures(self, node, textureList):
         for materialIndex in range( 0, node.GetMaterialCount() ):
@@ -246,15 +243,8 @@ class Scene () :
                 #print texture.GetFileName()   
 
     def exploreMesh (self, node) :
-        """
-        if node.GetName() == 'Bone002' :
-            print 'test bone'
-        """
-
-        mesh = node.GetMesh()         
-
-        #this will transform the UVs from byPolygon to byControlPoint
-        #mesh.SplitPoints()
+        
+        mesh = node.GetMesh() 
 
         m = MyMesh()
         m.node = node;
@@ -270,7 +260,6 @@ class Scene () :
             print "Scene: Error, UV mapping mode not supported, please use EMappingMode.eByPolygonVertex"
             return 
 
-
         uvs_array = mesh_uvs.GetDirectArray()
         uvs_count = uvs_array.GetCount()
         uv_values = []
@@ -279,14 +268,10 @@ class Scene () :
         for k in range( uvs_count ):
             uv = uvs_array.GetAt( k )
             uv = [ uv[ 0 ], uv[ 1 ] ]
-            uv_values.append( uv )       
-
-
-        
+            uv_values.append( uv )
 
         m.textureCoordinates = uv_values
-        self.extractTextures(node, m.textures)
-        
+        self.extractTextures(node, m.textures)        
 
         fbxMatrix = fbx.FbxAMatrix()
         fbxMatrix = node.EvaluateGlobalTransform(self.time)
@@ -341,8 +326,6 @@ class Scene () :
 
                     vertex = MyMaths.vectorDotMatrix(pInBoneCoords0, myboneTransformT)"""
 
-
-
                     boneTransform0 = m.bones[boneIndex].boneMatrixT
                     myboneTransform0 = [[ 1, 0, 0, 0],[ 0, 1, 0, 0],[ 0, 0, 1, 0],[ 0, 0, 0, 0]]                    
                     for y in range (0, 4) :
@@ -362,13 +345,9 @@ class Scene () :
                 
                     p = [p[0] + vertexToInterpolate[n][0],  p[1] + vertexToInterpolate[n][1], p[2] + vertexToInterpolate[n][2], 1]
                               
-            m.controlPoints.append(p)
+            m.controlPoints.append(p)            
 
-
-            #mesh.text
-            #m.textureCoordinates.append(mesh.GetAllChannelUV
-
-        #print 'skinning finished'
+        # skinning finished
 
         polygonCount = mesh.GetPolygonCount()
         count = list(range(polygonCount))
@@ -376,11 +355,11 @@ class Scene () :
         vertex_id = 0
 
         for i in count:       
-            """Get indices for the current triangle"""   
+            # Get indices for the current triangle
             _indices = []   
             poly_uvs = []
 
-            """Check if the polygon is facing the camera, discard it if not""" 
+            # Check if the polygon is facing the camera, discard it if not 
 
             for j in range(0, 3): 
 
@@ -479,10 +458,8 @@ class Scene () :
         boundaries.append([maxX, maxY, minZ, 1])
         boundaries.append([maxX, minY, minZ, 1])
         boundaries.append([minX, maxY, minZ, 1])
-        boundaries.append([minX, minY, minZ, 1])   
-        
-                      
-        
+        boundaries.append([minX, minY, minZ, 1]) 
+
         return boundaries        
 
     

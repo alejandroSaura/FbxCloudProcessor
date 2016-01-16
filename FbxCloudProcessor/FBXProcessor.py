@@ -8,7 +8,7 @@ import MyScene
 
 def GetTextures(fileName) :
     scene = MyScene.Scene()        
-    scene.InitializeScene("Assets/"+fileName+".FBX", None)
+    scene.InitializeScene("Temporal/"+fileName+".FBX", None)
     scene.InitializeCamera(0);
     scene.setTime(0)
     textures = scene.extractAllTextures(scene.root) 
@@ -26,42 +26,36 @@ def GetTextures(fileName) :
 
 def CreateAnimationSheet(fileName) :
 
+    # Animation Sheet Parameters:
     imageWidth = 256   
     imageHeight = 256
-
     numberOfFrames = 8;
     animationLength = 100;
 
-    # we'll render all frames for each camera angle
+    # list of camera angles
     cameraAngleList = [0, 45, 90, 135, 180, -135, -90, -45]
 
-    def compareBoundaries(bound1, bound2) :
+    #def compareBoundaries(bound1, bound2) :
+    #    result = []
+    #    maxX = max(bound1[0][0], bound2[0][0])
+    #    minX = min(bound1[7][0], bound2[7][0])
+    #    maxY = max(bound1[0][1], bound2[0][1])
+    #    minY = min(bound1[7][1], bound2[7][1])
+    #    maxZ = max(bound1[0][2], bound2[0][2])
+    #    minZ = min(bound1[7][2], bound2[7][2])
+    #    result.append([maxX, maxY, maxZ, 1])
+    #    result.append([maxX, minY, maxZ, 1]) 
+    #    result.append([minX, maxY, maxZ, 1])
+    #    result.append([minX, minY, maxZ, 1])
+    #    result.append([maxX, maxY, minZ, 1])
+    #    result.append([maxX, minY, minZ, 1])
+    #    result.append([minX, maxY, minZ, 1])
+    #    result.append([minX, minY, minZ, 1]) 
+    #    return result       
 
-        result = []
-
-        maxX = max(bound1[0][0], bound2[0][0])
-        minX = min(bound1[7][0], bound2[7][0])
-        maxY = max(bound1[0][1], bound2[0][1])
-        minY = min(bound1[7][1], bound2[7][1])
-        maxZ = max(bound1[0][2], bound2[0][2])
-        minZ = min(bound1[7][2], bound2[7][2])
-
-        result.append([maxX, maxY, maxZ, 1])
-        result.append([maxX, minY, maxZ, 1]) 
-        result.append([minX, maxY, maxZ, 1])
-        result.append([minX, minY, maxZ, 1])
-
-        result.append([maxX, maxY, minZ, 1])
-        result.append([maxX, minY, minZ, 1])
-        result.append([minX, maxY, minZ, 1])
-        result.append([minX, minY, minZ, 1])   
-
-        return result       
-
-    # calculate max world boundaries
+    # calculate max world boundaries in projected coordinates
     print "Calculating scene boundaries..."
-
-    # maxX, maxY, maxZ, minX, minY, minZ
+    
     globalBoundaries = None
     #count = list(range(numberOfFrames))     
     #for i in count :                
@@ -78,8 +72,9 @@ def CreateAnimationSheet(fileName) :
     #    else :
     #        globalBoundaries = boundaries
 
+    # We take just the first frame of the front camera Angle for time sake
     scene = MyScene.Scene()        
-    scene.InitializeScene("Assets/"+fileName+".FBX", None)
+    scene.InitializeScene("Temporal/"+fileName+".FBX", None)
     scene.InitializeCamera(0);
     scene.setTime(0)
     scene.exploreScene(scene.root) 
@@ -96,14 +91,14 @@ def CreateAnimationSheet(fileName) :
     minX = -maxX
     minY = -maxY
     minZ = -maxZ
-     
 
-    for k in cameraAngleList :
+     
+    for k in cameraAngleList :       
 
         # array of process
         pArray = []
 
-        # launch one process per frame to render
+        # launch one process per frame
         count = list(range(numberOfFrames))
         for i in count :
             frame = int((animationLength/numberOfFrames)*i)
@@ -130,10 +125,5 @@ def CreateAnimationSheet(fileName) :
             im = Image.open("Temporal/"+str(cameraAngleList[row]) + "_" + fileName + "_" + str(frameNumber) + ".PNG")
             animationSheet.paste(im, (column*imageWidth,row*imageHeight))
 
-    animationSheet.save("animationSheet.PNG")
-     
-
-    # TO-DO: push final image to the client's repository
-
-    # TO-DO: delete contents on temporal
+    animationSheet.save("Temporal/animationSheet.PNG")
 

@@ -20,7 +20,7 @@ def do_cprofile(func):
             profile.print_stats()
     return profiled_func
 
-#This class receives a mesh with control points [on world space] and the camera transform 
+# This class receives a mesh with control points [on world space] and the camera transform 
 class Renderer:
 
     image = {}
@@ -72,7 +72,7 @@ class Renderer:
         self.minProjY = 0
         self.minZ = 0
 
-        #This will be the render target
+        # This will be the render target
         self.image = Image.new('RGB', (width, height))
         self.zRender = Image.new('RGB', (self.imageWidth, self.imageHeight))
 
@@ -215,7 +215,7 @@ class Renderer:
         """dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(255,255,255)'))"""          
         
         ImageFile.LOAD_TRUNCATED_IMAGES = True
-        texture = Image.open(os.path.join("Assets", self.mesh.textures[0].encode("ascii")), 'r')
+        texture = Image.open(os.path.join("Temporal", self.mesh.textures[0].encode("ascii")), 'r')
 
         #textureAccessed = False
         #while(textureAccessed == False) :
