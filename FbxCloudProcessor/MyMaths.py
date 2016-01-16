@@ -79,8 +79,3 @@ def vector4CrossProduct(vec_a, vec_b):
     s3 = (vec_a[0] * vec_b[1] - vec_a[1] * vec_b[0])
 
     return [s1, s2, s3, 0]
-
-
-
-
-

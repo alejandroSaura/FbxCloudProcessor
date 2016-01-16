@@ -45,27 +45,40 @@ def CreateAnimationSheet(fileName) :
 
     # maxX, maxY, maxZ, minX, minY, minZ
     globalBoundaries = None
-    count = list(range(numberOfFrames))     
-    for i in count :                
-        frame = int((animationLength/numberOfFrames)*i)
-        print "Calculating boundaries: frame " + str(frame)
-        scene = MyScene.Scene()        
-        scene.InitializeScene("Assets/"+fileName+".FBX", None)
-        scene.InitializeCamera(0);
-        scene.setTime(int(frame))
-        scene.exploreScene(scene.root) 
-        boundaries = scene.calculateWorldBoundaries()
-        if globalBoundaries != None :
-            globalBoundaries = compareBoundaries(boundaries, globalBoundaries)
-        else :
-            globalBoundaries = boundaries
+    #count = list(range(numberOfFrames))     
+    #for i in count :                
+    #    frame = int((animationLength/numberOfFrames)*i)
+    #    print "Calculating boundaries: frame " + str(frame)
+    #    scene = MyScene.Scene()        
+    #    scene.InitializeScene("Assets/"+fileName+".FBX", None)
+    #    scene.InitializeCamera(0);
+    #    scene.setTime(int(frame))
+    #    scene.exploreScene(scene.root) 
+    #    boundaries = scene.calculateWorldBoundaries() #Projected
+    #    if globalBoundaries != None :
+    #        globalBoundaries = compareBoundaries(boundaries, globalBoundaries)
+    #    else :
+    #        globalBoundaries = boundaries
 
-    maxX = globalBoundaries[0][0]
-    minX = globalBoundaries[7][0]
-    maxY = globalBoundaries[0][1]
-    minY = globalBoundaries[7][1]
-    maxZ = globalBoundaries[0][2]
-    minZ = globalBoundaries[7][2]
+    scene = MyScene.Scene()        
+    scene.InitializeScene("Assets/"+fileName+".FBX", None)
+    scene.InitializeCamera(0);
+    scene.setTime(0)
+    scene.exploreScene(scene.root) 
+    boundaries = scene.calculateWorldBoundaries() #Projected
+    globalBoundaries = boundaries
+
+    maxX = globalBoundaries[0][0] - globalBoundaries[0][0]*0.2    
+    minX = globalBoundaries[2][0] - globalBoundaries[2][0]*0.2
+    maxY = globalBoundaries[0][1] - globalBoundaries[0][1]*0.2   
+    minY = globalBoundaries[1][1] - globalBoundaries[1][1]*0.2
+    maxZ = globalBoundaries[0][2] - globalBoundaries[0][0]*0.2    
+    minZ = globalBoundaries[7][2] - globalBoundaries[7][0]*0.2
+
+    minX = -maxX
+    minY = -maxY
+    minZ = -maxZ
+     
 
     for k in cameraAngleList :
 
@@ -86,7 +99,7 @@ def CreateAnimationSheet(fileName) :
 
 
 
-    # TO-DO: take the images from /Temporal and compose them into the animations sheet
+    # take the images from /Temporal and compose them into the animations sheet
     # one row per camera view, 8 camera views
 
     animationSheet = Image.new('RGB', (imageWidth*numberOfFrames, imageHeight*8))

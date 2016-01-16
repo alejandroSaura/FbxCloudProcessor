@@ -18,6 +18,8 @@ minX = float(arguments[9])
 minY = float(arguments[10])
 minZ = float(arguments[11])
 
+
+
 boundaries = []
 boundaries.append([maxX, maxY, maxZ, 1])
 boundaries.append([maxX, minY, maxZ, 1]) 

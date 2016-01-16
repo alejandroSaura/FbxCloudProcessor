@@ -407,16 +407,32 @@ class Scene () :
             m = self.meshes[k]
             count = range(len(m.controlPoints))
             for i in count:       
-                #control points must be in world coordinates
+                #control points must be in camera coordinates
+                m.controlPoints[i] = MyMaths.vectorDotMatrix(m.controlPoints[i], self.worldToCamera)                
+                m.controlPoints[i] = [m.controlPoints[i][0], -m.controlPoints[i][1], m.controlPoints[i][2]]
+
                 """check boundaries"""
+                #if (m.controlPoints[i][0] > maxX) :
+                #    maxX = m.controlPoints[i][0]
+                #if (m.controlPoints[i][0] < minX) :
+                #    minX = m.controlPoints[i][0]
+                #if (m.controlPoints[i][1] > maxY) :
+                #    maxY = m.controlPoints[i][1]
+                #if (m.controlPoints[i][1] < minY) :
+                #    minY = m.controlPoints[i][1]
+                #if (m.controlPoints[i][2] > maxZ) :
+                #    maxZ = m.controlPoints[i][2]
+                #if (m.controlPoints[i][2] < minZ) :
+                #    minZ = m.controlPoints[i][2]
+
                 if (m.controlPoints[i][0] > maxX) :
                     maxX = m.controlPoints[i][0]
-                if (m.controlPoints[i][0] < minX) :
-                    minX = m.controlPoints[i][0]
+                if (-m.controlPoints[i][0] > maxX) :
+                    maxX = -m.controlPoints[i][0]
                 if (m.controlPoints[i][1] > maxY) :
                     maxY = m.controlPoints[i][1]
-                if (m.controlPoints[i][1] < minY) :
-                    minY = m.controlPoints[i][1]
+                if (-m.controlPoints[i][1] > maxY) :
+                    maxY = -m.controlPoints[i][1]
                 if (m.controlPoints[i][2] > maxZ) :
                     maxZ = m.controlPoints[i][2]
                 if (m.controlPoints[i][2] < minZ) :
@@ -430,7 +446,9 @@ class Scene () :
         boundaries.append([maxX, maxY, minZ, 1])
         boundaries.append([maxX, minY, minZ, 1])
         boundaries.append([minX, maxY, minZ, 1])
-        boundaries.append([minX, minY, minZ, 1])                 
+        boundaries.append([minX, minY, minZ, 1])   
+        
+                      
         
         return boundaries        
 

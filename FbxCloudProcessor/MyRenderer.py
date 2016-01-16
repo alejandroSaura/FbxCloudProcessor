@@ -126,26 +126,36 @@ class Renderer:
         minZ = 0
 
         self.worldBoundaries = bound
+
         count = range(len(self.worldBoundaries))
         for i in count:
 
             """project bounding box points"""
-            self.worldBoundaries[i] = MyMaths.vectorDotMatrix(self.worldBoundaries[i], self.worldToCamera)                
-            self.worldBoundaries[i] = [self.worldBoundaries[i][0], -self.worldBoundaries[i][1], self.worldBoundaries[i][2]]
+            #self.worldBoundaries[i] = MyMaths.vectorDotMatrix(self.worldBoundaries[i], self.worldToCamera)                
+            #self.worldBoundaries[i] = [self.worldBoundaries[i][0], -self.worldBoundaries[i][1], self.worldBoundaries[i][2]]
 
             """check boundaries"""
-            if (self.worldBoundaries[i][0] > maxX) :
-                maxX = self.worldBoundaries[i][0]
-            if (self.worldBoundaries[i][0] < minX) :
-                minX = self.worldBoundaries[i][0]
-            if (self.worldBoundaries[i][1] > maxY) :
-                maxY = self.worldBoundaries[i][1]
-            if (self.worldBoundaries[i][1] < minY) :
-                minY = self.worldBoundaries[i][1]
-            if (self.worldBoundaries[i][2] > maxZ) :
-                maxZ = self.worldBoundaries[i][2]
-            if (self.worldBoundaries[i][2] < minZ) :
-                minZ = self.worldBoundaries[i][2]
+            #this check is neccesary as we have them now in camera coordinates
+            #if (self.worldBoundaries[i][0] > maxX) :
+            #    maxX = self.worldBoundaries[i][0]
+            #if (self.worldBoundaries[i][0] < minX) :
+            #    minX = self.worldBoundaries[i][0]
+            #if (self.worldBoundaries[i][1] > maxY) :
+            #    maxY = self.worldBoundaries[i][1]
+            #if (self.worldBoundaries[i][1] < minY) :
+            #    minY = self.worldBoundaries[i][1]
+            #if (self.worldBoundaries[i][2] > maxZ) :
+            #    maxZ = self.worldBoundaries[i][2]
+            #if (self.worldBoundaries[i][2] < minZ) :
+            #    minZ = self.worldBoundaries[i][2]
+
+        maxX = bound[0][0]
+        minX = bound[2][0]
+        maxY = bound[0][1]
+        minY = bound[1][1]
+        maxZ = bound[0][2]
+        minZ = bound[7][2]
+        
         
         self.renderXRange = maxX - minX
         self.renderYRange = maxY - minY
@@ -155,7 +165,7 @@ class Renderer:
         self.minProjY = minY
         self.minZ = minZ
 
-        self.aspectRatio = self.renderYRange/self.renderYRange
+        self.aspectRatio = self.renderYRange/self.renderXRange
 
 
     def projectControlPoints (self) :
@@ -174,9 +184,9 @@ class Renderer:
             #self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0]/self.renderXRange*self.imageWidth, self.mesh.controlPoints[i][1]/self.renderYRange*self.imageHeight, (self.mesh.controlPoints[i][2])/self.ZRange]
 
             if(self.aspectRatio < 1) :
-                self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0]/self.renderXRange*self.imageWidth, self.mesh.controlPoints[i][1]/self.renderXRange*self.imageWidth, (self.mesh.controlPoints[i][2])/self.ZRange]
+                self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0]/self.renderXRange*self.imageWidth + self.imageWidth*0.25, self.mesh.controlPoints[i][1]/self.renderXRange*self.imageWidth + self.imageWidth*0.3, (self.mesh.controlPoints[i][2])/self.ZRange]
             if(self.aspectRatio >= 1) :
-                self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0]/self.renderYRange*self.imageHeight, self.mesh.controlPoints[i][1]/self.renderYRange*self.imageHeight, (self.mesh.controlPoints[i][2])/self.ZRange]
+                self.mesh.controlPoints[i] = [self.mesh.controlPoints[i][0]/self.renderYRange*self.imageHeight + self.imageHeight*0.25, self.mesh.controlPoints[i][1]/self.renderYRange*self.imageHeight + self.imageHeight*0.3, (self.mesh.controlPoints[i][2])/self.ZRange]
                            
 
 
