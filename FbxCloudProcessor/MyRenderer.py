@@ -227,6 +227,8 @@ class Renderer:
         #        pass
 
         for i in range(len(self.sortedPolygons)):   
+
+            
             
             #Control points in screen space
             a = self.mesh.controlPoints[self.sortedPolygons[i].vertexIndicesArray[0]]

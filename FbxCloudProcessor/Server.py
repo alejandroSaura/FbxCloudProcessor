@@ -85,9 +85,9 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
             
 # server start :
-httpd = BaseHTTPServer.HTTPServer(("0.0.0.0", 8000), MyHandler)
-httpd.serve_forever()
+#httpd = BaseHTTPServer.HTTPServer(("0.0.0.0", 8000), MyHandler)
+#httpd.serve_forever()
 
 """For stand-alone debug only"""
-#textures = GetTextures("MaskBoy")
-#CreateAnimationSheet("MaskBoy")
+textures = GetTextures("Warrior")
+CreateAnimationSheet("Warrior")
