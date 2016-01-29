@@ -42,6 +42,8 @@ class Scene () :
 
     def InitializeScene (self, fileName, _renderer) :
 
+        #print 'Initializing Scene...'
+
         self.time = fbx.FbxTime()
         #self.time.SetFrame(50)
 
@@ -229,6 +231,7 @@ class Scene () :
 
 
     def extractTextures(self, node, textureList):
+        if node.GetMaterialCount() == 0 : return
         for materialIndex in range( 0, node.GetMaterialCount() ):
             #materialCount = node.GetMaterialCount()
             material = node.GetMaterial( materialIndex )

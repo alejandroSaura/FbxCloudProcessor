@@ -6,6 +6,8 @@ import threading
 from PIL import Image 
 import MyScene
 
+#from FrameProcessor import testFrame
+
 def GetTextures(fileName) :
     scene = MyScene.Scene()        
     scene.InitializeScene("Temporal/"+fileName+".FBX", None)
@@ -103,10 +105,11 @@ def CreateAnimationSheet(fileName) :
         for i in count :
             frame = int((animationLength/numberOfFrames)*i)
             pArray.append(Popen(["python", "FrameProcessor.py", str(frame), str(k), str(imageWidth), str(imageHeight), fileName, str(maxX), str(maxY), str(maxZ), str(minX), str(minY), str(minZ)]))
+            #testFrame(frame, k, imageWidth, imageHeight, fileName, maxX, maxY, maxZ, minX, minY, minZ);
 
         # wait for all processes to finish
         for i in count :         
-                pArray[i].wait()
+            pArray[i].wait()
 
         print "FBXProcessor: All frames rendered for camera angle: " + str(k)
 

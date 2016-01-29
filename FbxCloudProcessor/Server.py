@@ -11,6 +11,27 @@ import os, shutil
 
 from FBXProcessor import CreateAnimationSheet
 from FBXProcessor import GetTextures
+
+from github import Github
+from github import InputGitTreeElement
+
+
+import base64
+
+
+class MethodRequest(urllib2.Request):
+    def __init__(self, *args, **kwargs):
+        if 'method' in kwargs:
+            self._method = kwargs['method']
+            del kwargs['method']
+        else:
+            self._method = None
+        return urllib2.Request.__init__(self, *args, **kwargs)
+
+    def get_method(self, *args, **kwargs):
+        if self._method is not None:
+            return self._method
+        return urllib2.Request.get_method(self, *args, **kwargs)
  
 class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
@@ -47,6 +68,35 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         # url = "https://raw.githubusercontent.com/kt-chin/CloudComputingClient/master/Input/Maskboy.FBX"
         url = "https://raw.githubusercontent.com/" + payload['repository']['full_name']+"/master"+"/"+fileToProcess
 
+        g = Github("alejandroSaura", "al141190")
+        repo = g.get_repo(payload['repository']['id'])
+        url = payload['repository']['git_url']
+
+        
+        head_ref = repo.get_git_ref('heads/master')
+
+        #repo.create_git_blob( 'hi', 'utf-8');
+        latest_commit = (repo.get_commit(payload['head_commit']['id'])).commit
+        base_tree = latest_commit.tree
+        
+        new_tree = repo.create_git_tree(
+        [InputGitTreeElement(
+            path="test.txt",
+            mode='100644',
+            type='blob',
+            content="test"
+        )],
+        base_tree)
+
+        new_commit = repo.create_git_commit(
+        message="test commit message",
+        parents=[latest_commit],
+        tree=new_tree)
+
+        head_ref.edit(sha=new_commit.sha, force=False)
+       
+        
+
         print "Server: Fetching FBX file..."
         req = urllib2.Request(url)
         req.add_header('Content-Type', 'application/octet-stream')
@@ -77,7 +127,13 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         # Start creating animation sheet
         CreateAnimationSheet(fileName)
+
+
         print 'Server: FBX '+fileName+' processed'
+
+        # push
+        
+       
 
         # TO-DO: push final image to the client's repository
 
@@ -85,9 +141,11 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     
             
 # server start :
-#httpd = BaseHTTPServer.HTTPServer(("0.0.0.0", 8000), MyHandler)
-#httpd.serve_forever()
+httpd = BaseHTTPServer.HTTPServer(("0.0.0.0", 5000), MyHandler)
+httpd.serve_forever()
 
 """For stand-alone debug only"""
-textures = GetTextures("Warrior")
-CreateAnimationSheet("Warrior")
+#textures = GetTextures("Cartoon")
+#CreateAnimationSheet("Cartoon")
+
+

@@ -214,6 +214,8 @@ class Renderer:
         """background"""
         """dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(255,255,255)'))"""          
         
+        if len(self.mesh.textures) == 0 : return
+
         ImageFile.LOAD_TRUNCATED_IMAGES = True
         texture = Image.open(os.path.join("Temporal", self.mesh.textures[0].encode("ascii")), 'r')
 
