@@ -3,6 +3,9 @@ import BaseHTTPServer
 import json
 import os.path
 import sys
+import io
+
+import base64
 
 import urllib2
 
@@ -74,17 +77,24 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         
         head_ref = repo.get_git_ref('heads/master')
 
-        blob = repo.create_git_blob( "blob1", 'utf-8');
+
+        with open("Wood.jpg", "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read())
+        #image_binary_data = open("Wood.jpg", "rb")        
+        #encoded = base64.b64encode(image_binary_data)
+        tblob = repo.create_git_blob(encoded_string, 'base64');
+        blob = repo.get_git_blob(tblob.sha)
+
 
         latest_commit = (repo.get_commit(payload['head_commit']['id'])).commit
         base_tree = latest_commit.tree
         
         new_tree = repo.create_git_tree(
         [InputGitTreeElement(
-            path="test.txt",
+            path="Output/Wood.jpg",
             mode='100644',
             type='blob',
-            content=blob
+            content=tblob
         )],
         base_tree)
 
@@ -93,7 +103,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         parents=[latest_commit],
         tree=new_tree)
 
-        head_ref.edit(sha=new_commit.sha, force=False)
+        head_ref.edit(sha=new_commit.sha, force=True)
        
         
 
