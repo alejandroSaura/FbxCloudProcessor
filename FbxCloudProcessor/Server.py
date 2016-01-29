@@ -68,14 +68,14 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         # url = "https://raw.githubusercontent.com/kt-chin/CloudComputingClient/master/Input/Maskboy.FBX"
         url = "https://raw.githubusercontent.com/" + payload['repository']['full_name']+"/master"+"/"+fileToProcess
 
-        g = Github("alejandroSaura", "al141190")
+        g = Github("alejandroSaura", "")
         repo = g.get_repo(payload['repository']['id'])
         url = payload['repository']['git_url']
-
         
         head_ref = repo.get_git_ref('heads/master')
 
-        #repo.create_git_blob( 'hi', 'utf-8');
+        blob = repo.create_git_blob( "blob1", 'utf-8');
+
         latest_commit = (repo.get_commit(payload['head_commit']['id'])).commit
         base_tree = latest_commit.tree
         
@@ -84,7 +84,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             path="test.txt",
             mode='100644',
             type='blob',
-            content="test"
+            content=blob
         )],
         base_tree)
 
